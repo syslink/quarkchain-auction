@@ -9,7 +9,7 @@ export default function Index() {
       <IceContainer>
         <div className={styles.exceptionContent}>
           <img
-            src="https://img.alicdn.com/tfs/TB1txw7bNrI8KJjy0FpXXb5hVXa-260-260.png"
+            src=""
             className={styles.imgException}
             alt="页面不存在"
           />
