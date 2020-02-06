@@ -1,0 +1,68 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  width: 1200px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.logoLink {
+  color: #000000 !important;
+  font-weight: 500;
+  font-size: 30px;
+  text-decoration: none;
+  
+  display: flex;
+  align-items: center; /*定义body的元素垂直居中*/
+}
+
+.nav {
+  display: flex;
+  margin-left: 100px;
+}
+
+.navItem {
+  height: 40px;
+  margin-left: 20px;
+  line-height: 40px;
+}
+
+.navItemLink {
+  display: inline-block;
+  padding: 0 20px;
+  color: #000000 !important;
+  text-decoration: none;
+  font-weight: 500;
+  margin-right: 20px;
+}
+
+.activeNavItemLink {
+  composes: navItemLink;
+  color: #00C4FF !important;
+}
+
+.searchItem {
+}
+
+.accountItem {
+  display: flex;
+  align-items: center; /*定义body的元素垂直居中*/
+}
+
+.accountImg {
+  height: 40px;
+  width: 40px;
+}
+
+.ballonItem {
+  display: flex;
+  flex-direction: column;
+  //justify-content: flex-end;
+  margin-left: auto;
+}
+
+.imgItem {
+  height: 30px;
+  width: 30px;
+  margin-right: 10px;
+}

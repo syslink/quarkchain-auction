@@ -1,0 +1,22 @@
+@import '@alifd/next/reset.scss';
+
+.next-table-header-node .next-table-cell-wrapper {
+  background: #ffffff;
+  color: rgb(34, 36, 186);
+  font-size: 25px;
+}
+
+.next-pagination-list .next-pagination .next-pagination-item.next-current {
+  background: #00C4FF;
+}
+
+.next-dialog .next-dialog-header {
+  padding: 12px 20px 12px 20px;
+  border-bottom: 0 solid rgba(0,0,0,0);
+  border-style: none;
+  font-size: 35px;
+  background: #00C4FF;
+  color: #ffffff;
+  text-align:center;
+  height: 80px;
+}
