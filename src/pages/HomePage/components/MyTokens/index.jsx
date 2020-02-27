@@ -116,16 +116,16 @@ export default class MyTokens extends Component {
             </div> 
           : 
           <div>
-            <Row wrap justify="start" fixedWidth="xl">
+            <Row wrap justify="center" fixedWidth="xl" style={{ width: '100%' }}>
               {
-              displayData.map(data => <Col span="12">{data}</Col>)
+              displayData.map(data => <Col span="10">{data}</Col>)
               }
             </Row>
           </div>
           
         }
         
-        <Dialog style={{ width: "25%" }}
+        <Dialog style={{ width: "35%" }}
           visible={this.state.mintTokenVisible}
           closeable="esc,mask"
           onOk={() => this.setState({mintTokenVisible: false})}
@@ -135,7 +135,7 @@ export default class MyTokens extends Component {
           footerAlign='right'
           footer={this.state.mintTokenFooter}
         >
-          <Input style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '250px', height: '25px'}} placeholder="Token Amount"/>
+          <Input style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '85%', height: '25px'}} placeholder="Token Amount"/>
           <p style={{fontSize: 20, lineHeight: '180%', marginRight: 30, marginLeft: 30}}>
           Mint as many new tokens as you want, once the mint transaction succeeded, you can find those new thokens on 
           your current address!
