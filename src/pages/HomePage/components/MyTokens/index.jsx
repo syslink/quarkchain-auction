@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Button, Dialog, Input, Grid  } from '@alifd/next';
 import styles from './index.module.scss';
+import eventProxy from '../../../../utils/eventProxy';
 
 const { Row, Col } = Grid;
 
@@ -47,13 +48,21 @@ export default class MyTokens extends Component {
   mintToken = () => {
     this.setState({mintTokenVisible: true});
   }
+
+  showExchange = (tokenInfo) => {
+    eventProxy.trigger('pageSelector', tokenInfo);
+  }
   
   render() {
     let displayData = [];
     if (this.state.tokenData.length > 1) {
         displayData = this.state.tokenData.map(tokenInfo =>
                                               <div className={styles.content}>
-                                                <div className={styles.title}>{tokenInfo.tokenName}</div>
+                                                <div className={styles.title}>
+                                                  <Button text onClick={this.showExchange.bind(this, tokenInfo)}>
+                                                    <div className={styles.title}>{tokenInfo.tokenName}</div>
+                                                  </Button>
+                                                </div>
                                         
                                                 <li className={styles.navItem}>
                                                   <li className={styles.auctionInfo}>
@@ -87,7 +96,12 @@ export default class MyTokens extends Component {
         {
           this.state.tokenData.length == 0 ? '' : (this.state.tokenData.length == 1) ? 
             <div className={styles.content}>
-              <div className={styles.title}>Satoshi</div>
+              
+              <div className={styles.title}>
+                <Button text onClick={this.showExchange.bind(this, {tokenName: 'Satoshi'})}>
+                  <div className={styles.title}>Satoshi</div>
+                </Button>
+              </div>
       
               <li className={styles.navItem}>
                 <li className={styles.auctionInfo}>

@@ -3,6 +3,7 @@ import cookie from 'react-cookies';
 import Banner from './components/Banner';
 import AuctionedTokens from './components/AuctionedTokens';
 import MyTokens from './components/MyTokens';
+import Exchange from './components/Exchange';
 import eventProxy from '../../utils/eventProxy';
 
 export default class HomePage extends Component {
@@ -12,7 +13,7 @@ export default class HomePage extends Component {
     this.state = {
       start: false,
       paused: false,
-      isMyTokens: false,
+      whichPage: 'showTokenAuction',
     };
     
     const start = cookie.load('start') == 'true';
@@ -23,8 +24,8 @@ export default class HomePage extends Component {
     cookie.save('start', this.state.start);
   }
   componentDidMount = () => {
-    eventProxy.on('showMyTokens', (isMyTokens) => {
-      this.setState({isMyTokens});
+    eventProxy.on('pageSelector', (whichPage) => {
+      this.setState({whichPage});
     })
   }
   
@@ -32,15 +33,23 @@ export default class HomePage extends Component {
     return (
       <div>
         {
-          this.state.isMyTokens ? 
+          this.state.whichPage == 'showMyTokens' ? 
             <div>
               <MyTokens />
             </div>
               :
-            <div>
-              <Banner start={this.state.start} paused={this.state.paused}/>
-              <AuctionedTokens start={this.state.start}/>
-            </div>
+            (
+              this.state.whichPage == 'showTokenAuction' ? 
+                <div>
+                  <Banner start={this.state.start} paused={this.state.paused}/>
+                  <AuctionedTokens start={this.state.start}/>
+                </div>
+                  :
+                <div>
+                  <Exchange tokenInfo={this.state.whichPage}/>
+                </div>
+            )
+            
         }
       </div>
     );

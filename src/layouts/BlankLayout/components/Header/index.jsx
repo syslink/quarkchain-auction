@@ -29,12 +29,12 @@ export default class Header extends Component {
 
   showTokenAuction = () => {
     this.setState({tokenAuctionActive: true});
-    eventProxy.trigger('showMyTokens', false);
+    eventProxy.trigger('pageSelector', 'showTokenAuction');
   }
 
   showkMyTokens = () => {
     this.setState({tokenAuctionActive: false});
-    eventProxy.trigger('showMyTokens', true);
+    eventProxy.trigger('pageSelector', 'showMyTokens');
   }
 
   render () {
