@@ -14,6 +14,7 @@ export default class HomePage extends Component {
       start: false,
       paused: false,
       whichPage: 'showTokenAuction',
+      data: null,
     };
     
     const start = cookie.load('start') == 'true';
@@ -24,9 +25,9 @@ export default class HomePage extends Component {
     cookie.save('start', this.state.start);
   }
   componentDidMount = () => {
-    eventProxy.on('pageSelector', (whichPage) => {
-      this.setState({whichPage});
-    })
+    eventProxy.on('pageSelector', (pageInfo) => {
+      this.setState({whichPage: pageInfo.type, data: pageInfo.data});
+    });
   }
   
   render() {
@@ -35,18 +36,18 @@ export default class HomePage extends Component {
         {
           this.state.whichPage == 'showMyTokens' ? 
             <div>
-              <MyTokens />
+              <MyTokens tokenData={this.state.data}/>
             </div>
               :
             (
               this.state.whichPage == 'showTokenAuction' ? 
                 <div>
-                  <Banner start={this.state.start} paused={this.state.paused}/>
+                  <Banner/>
                   <AuctionedTokens start={this.state.start}/>
                 </div>
                   :
                 <div>
-                  <Exchange tokenInfo={this.state.whichPage}/>
+                  <Exchange tokenInfo={this.state.data}/>
                 </div>
             )
             

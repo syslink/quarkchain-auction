@@ -1,8 +1,13 @@
 import React, { Component } from 'react';
-import { Button, Dialog, Input, Grid  } from '@alifd/next';
+import { createHashHistory } from 'history';
+import { Button, Dialog, Input, Grid, Message, Notification } from '@alifd/next';
+import BigNumber from 'bignumber.js';
 import styles from './index.module.scss';
+import * as Contracts from '../../../../utils/contracts';
 import eventProxy from '../../../../utils/eventProxy';
+import * as tool from '../../../../utils/global';
 
+export const history = createHashHistory();
 const { Row, Col } = Grid;
 
 export default class MyTokens extends Component {
@@ -10,8 +15,10 @@ export default class MyTokens extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      tokenData: [],
+      tokenName: props.location.search.length > 1 ? props.location.search.substr(1) : '',
+      tokenData: props.tokenData != null ? props.tokenData : [],
       mintTokenVisible: false,
+      curMintedTokenName: '',
       mintTokenFooter: (<view style={{marginRight: '40px', marginBottom: '80px'}}>
         <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: '#00C4FF', 
           width: '120px', height: '50px', fontSize: '20px',
@@ -20,37 +27,88 @@ export default class MyTokens extends Component {
         </Button>
         <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: '#00C4FF', 
           width: '120px', height: '50px', fontSize: '20px',
-          color: '#FFFFFF'}} onClick={() => this.setState({mintTokenVisible: false})}>                  
+          color: '#FFFFFF'}} onClick={this.mintToken.bind(this)}>                  
           OK
         </Button>
       </view>),
     };
   }
+
   componentDidMount = () => {
-    let num = Math.floor(Math.random() * 10);
-    if (num > 1) num = 6;
-    this.state.tokenData = this.generateData(num);
-    this.setState({tokenData: this.state.tokenData});
+    this.getData();
+  }
+  
+  componentWillReceiveProps(nextProps) {
+    this.state.tokenName = nextProps.location.search.length > 1 ? nextProps.location.search.substr(1) : '';
+    this.getData();
   }
 
-  generateData = (number) => {
-    let data = [];
-    for (let i = 0; i < number; i++) {
-      data.push({tokenName: 'Satoshi-' + i, 
-                 auctionedPrice: '50000 QKC', 
-                 createdTime: '21:42:12 01/22/2020', 
-                 totalSupply: '10000000', 
-                 owner: '0xaaaa...bbbb'});
-    }
-    return data;
+  getData = () => {
+    if (this.state.tokenName == '') return;
+    Contracts.initContractObj(tool.qkcWeb3).then(result => {
+      tool.qkcWeb3.eth.getAccounts().then(accounts => {
+        const tokenId = tool.convertTokenName2Num(this.state.tokenName);
+        Contracts.NonReservedNativeTokenManager.getNativeTokenInfo([tokenId]).then(tokenInfo => {
+          console.log(tokenInfo);
+          tokenInfo.createTime = tokenInfo[0].toNumber();
+          tokenInfo.owner = tokenInfo[1];
+          tokenInfo.totalSupply = tokenInfo[2];
+          if (tokenInfo.createTime == 0) {
+            Notification.config({placement: 'br'});
+            Notification.open({
+              title: 'Warning',
+              content: 'There is no token with this name.',
+              type: 'warning',
+              duration: 0
+            });
+          } else {
+            tokenInfo.tokenName = this.state.tokenName;
+            tokenInfo.curAccount = accounts[0];
+            this.setState({tokenData: [tokenInfo]})
+          }
+        });
+      });    
+    });
+  }
+
+  openMintTokenDialog = (v) => {
+    this.setState({mintTokenVisible: true, curMintedTokenName: v});
+  }
+
+  changeTokenAmount = (v) => {
+    this.state.mintedTokenAmount = v;
   }
 
   mintToken = () => {
-    this.setState({mintTokenVisible: true});
+    const valid = /^[1-9][0-9]*$/.test(this.state.mintedTokenAmount);
+    if (!valid) {
+      Message.error('Token amount only can be a number.');
+      return;
+    }
+    const amount = '0x' + new BigNumber(this.state.mintedTokenAmount).shiftedBy(18).toString(16);
+    const tokenId = tool.convertTokenName2Num(this.state.curMintedTokenName);
+    Contracts.NonReservedNativeTokenManager.mintNewToken([tokenId, amount], {}).then(txId => {
+      if (new BigNumber(txId, 16).toNumber() == 0) {
+        tool.displayErrorInfo('Fail to send transaction.');
+      } else {
+        this.setState({mintTokenVisible: false});
+        Notification.config({placement: 'br'});
+        Notification.open({
+            title: 'Result of Transaction',
+            content:
+            <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
+            type: 'success',
+            duration: 0
+        });
+      }
+    }).catch(error => {
+      if (error.code == 4001) return;
+      tool.displayErrorInfo(error);
+    });
   }
 
   showExchange = (tokenInfo) => {
-    eventProxy.trigger('pageSelector', tokenInfo);
+    history.push('/exchange?' + this.state.tokenName);
   }
   
   render() {
@@ -70,12 +128,12 @@ export default class MyTokens extends Component {
                                                   </li>
                                                   <div className={styles.value}>{tokenInfo.createdTime}</div>
                                                 </li>
-                                                <li className={styles.navItem}>
+                                                {/* <li className={styles.navItem}>
                                                   <li className={styles.auctionInfo}>
                                                     <div className={styles.desc}>Auctioned Price:</div>
                                                   </li>
                                                   <div className={styles.value}>{tokenInfo.auctionedPrice}</div>
-                                                </li>
+                                                </li> */}
                                                 <li className={styles.navItem}>
                                                   <li className={styles.auctionInfo}>
                                                     <div className={styles.desc}>Total Supply:</div>
@@ -84,7 +142,7 @@ export default class MyTokens extends Component {
                                                 </li>
                                                 <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: '#00C4FF', 
                                                   width: '120px', height: '50px', fontSize: '20px',
-                                                  color: '#FFFFFF', marginTop: '20px'}} onClick={() => this.mintToken()}>                  
+                                                  color: '#FFFFFF', marginTop: '20px'}} onClick={() => this.openMintTokenDialog.bind(this, tokenInfo.tokenName)}>                  
                                                   Mint Token
                                               </Button>
                                             </div> 
@@ -98,8 +156,8 @@ export default class MyTokens extends Component {
             <div className={styles.content}>
               
               <div className={styles.title}>
-                <Button text onClick={this.showExchange.bind(this, {tokenName: 'Satoshi'})}>
-                  <div className={styles.title}>Satoshi</div>
+                <Button text onClick={this.showExchange.bind(this, this.state.tokenData[0])}>
+                  <div className={styles.title}>{this.state.tokenData[0].tokenName}</div>
                 </Button>
               </div>
       
@@ -107,25 +165,25 @@ export default class MyTokens extends Component {
                 <li className={styles.auctionInfo}>
                   <div className={styles.desc}>Created Time:</div>
                 </li>
-                <div className={styles.value}>21:14:12 01/02/2020</div>
-              </li>
-              <li className={styles.navItem}>
-                <li className={styles.auctionInfo}>
-                  <div className={styles.desc}>Auctioned Price:</div>
-                </li>
-                <div className={styles.value}>50000 QKC</div>
+                <div className={styles.value}>{tool.displayDate(this.state.tokenData[0].createTime)}</div>
               </li>
               <li className={styles.navItem} style={{ width: '1050px'}}>
                 <li className={styles.navItem}>
                   <li className={styles.auctionInfo}>
                     <div className={styles.desc}>Total Supply:</div>
                   </li>
-                  <div className={styles.value}>1000000</div>
+                  <div className={styles.value}>{tool.convert2BaseUnit(this.state.tokenData[0].totalSupply)}</div>
                 </li>
-                <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: '#00C4FF', 
-                  width: '120px', height: '50px', fontSize: '20px', color: '#FFFFFF', marginTop: '-30px'}} onClick={() =>  this.mintToken()}>                  
-                  Mint Token
-                </Button>
+                {
+                  this.state.tokenData[0].owner == this.state.tokenData[0].curAccount ? 
+                    <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: '#00C4FF', 
+                      width: '120px', height: '50px', fontSize: '20px', color: '#FFFFFF', marginTop: '-30px'}} 
+                      onClick={this.openMintTokenDialog.bind(this, this.state.tokenData[0].tokenName)}>                  
+                      Mint Token
+                    </Button>
+                    :
+                    ""
+              }
               </li>
             </div> 
           : 
@@ -142,14 +200,17 @@ export default class MyTokens extends Component {
         <Dialog style={{ width: "35%" }}
           visible={this.state.mintTokenVisible}
           closeable="esc,mask"
-          onOk={() => this.setState({mintTokenVisible: false})}
+          //onOk={() => this.setState({mintTokenVisible: false})}
           onCancel={() => this.setState({mintTokenVisible: false})}
           onClose={() => this.setState({mintTokenVisible: false})}
           title='Mint Token'
           footerAlign='right'
           footer={this.state.mintTokenFooter}
         >
-          <Input style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '85%', height: '25px'}} placeholder="Token Amount"/>
+          <Input autoFocus style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '85%', height: '25px'}} 
+                 placeholder="Token Amount"
+                 onChange={this.changeTokenAmount.bind(this)}
+                 onPressEnter={this.mintToken.bind(this)}/>
           <p style={{fontSize: 20, lineHeight: '180%', marginRight: 30, marginLeft: 30}}>
           Mint as many new tokens as you want, once the mint transaction succeeded, you can find those new thokens on 
           your current address!

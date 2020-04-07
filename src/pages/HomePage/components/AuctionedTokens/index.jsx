@@ -10,7 +10,7 @@ export default class AuctionedTokenData extends Component {
     super(props);
     this.state = {
       tokenData: [],
-      start: props.start,
+      start: false,
     };
   }
   componentDidMount = () => {
