@@ -43,7 +43,7 @@ export default class HomePage extends Component {
               this.state.whichPage == 'showTokenAuction' ? 
                 <div>
                   <Banner/>
-                  <AuctionedTokens start={this.state.start}/>
+                  {/* <AuctionedTokens start={this.state.start}/> */}
                 </div>
                   :
                 <div>

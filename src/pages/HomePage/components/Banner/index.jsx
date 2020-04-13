@@ -29,6 +29,7 @@ export default class Banner extends Component {
       bidPrice: 0,
       highestBidderIsMe: false,
       remainBalance: 0,
+      bEnd: false,
       auctionParams: {duration: 0, minIncrementInPercent: 0, minPriceInQKC: 0},
       auctionStateInfo: {tokenId:0, highestBid:0, addrOfHighestBid:'0x', round:0, endTime:0},
       pausedColor: 'rgb(203,203,203)',
@@ -63,20 +64,18 @@ export default class Banner extends Component {
     auctionState.round = auctionState[3].toNumber();
     auctionState.endTime = auctionState[4].toNumber();
 
-    let start = false;
+    let start = true;
     let paused = false;
     let curRound = auctionState.round;
     if (auctionState.endTime > 946656000) {  // 946656000=2000/1/1, 小于此值说明处于第0轮,或者是调用了endAuction，round不需要变更
-      const bEnd = this.isOutOfTime(auctionState.endTime);
-      if (bEnd) {  // 已经过了终止时间，round需要加1
-        curRound++;
-        this.state.sameRound = false;
-      }
-      start = !bEnd;
-      paused = start && await Contracts.NonReservedNativeTokenManager.isPaused();
+      this.state.bEnd = this.isOutOfTime(auctionState.endTime);             // 当前一轮已经结束，并且为pause的时候，应该start new round
+      paused = await Contracts.NonReservedNativeTokenManager.isPaused();    // pause的时候，既不能endAuction，也不能bid
+      //if (!this.state.bEnd) start = true;
+    } else {
+      start = false;
     }
 
-    this.setState({auctionStateInfo: auctionState, start, paused, curRound, auctionParams});
+    this.setState({auctionStateInfo: auctionState, start, paused, curRound, auctionParams, bEnd: this.state.bEnd});
 
     qkcWeb3.eth.getAccounts().then(accounts => {
       this.setState({curAccount : accounts[0]});
@@ -122,7 +121,29 @@ export default class Banner extends Component {
       }
     });
   }
-
+  endAuction = () => {
+    Contracts.NonReservedNativeTokenManager.endAuction(null, {}).then(txId => {
+      console.log(txId);
+      this.setState({confimationVisible: false});
+      if (new BigNumber(txId, 16).toNumber() == 0) {
+        tool.displayErrorInfo('Fail to send transaction.');
+      } else {
+        this.setState({mintTokenVisible: false});
+        Notification.config({placement: 'br'});
+        Notification.open({
+            title: 'Result of Transaction',
+            content:
+            <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
+            type: 'success',
+            duration: 0
+        });
+      }
+    }).catch(error => {
+      if (error.code == 4001) return;
+      tool.displayErrorInfo(error);
+    });
+  }
+  
   bidNow = () => {
     const valid = /[0-9A-Z]{5,12}$/.test(this.state.tokenName);
     if (!valid) {
@@ -140,7 +161,7 @@ export default class Banner extends Component {
     Contracts.NonReservedNativeTokenManager.balances(this.state.curAccount).then(balance => {
       const bidPrice = new BigNumber(this.state.bidPrice).shiftedBy(18);
       balance = new BigNumber(balance.toHexString(), 16);
-      if (this.state.highestBidderIsMe && !this.state.sameRound) {
+      if (this.state.highestBidderIsMe) {
         balance = balance.minus(new BigNumber(this.state.auctionStateInfo.highestBid).shiftedBy(18));
       }
 
@@ -185,7 +206,7 @@ export default class Banner extends Component {
     return (
       <div className={styles.container}>
         <div className={styles.content}>
-          <div className={styles.title}>#{this.state.curRound} Round Token Auction</div>
+          <div className={styles.title}>Token Auction Round #{this.state.curRound}</div>
   
           <li className={styles.navItem}>
             <li className={styles.auctionInfo}>
@@ -198,7 +219,7 @@ export default class Banner extends Component {
           <li className={styles.navItem}>
             <li className={styles.auctionInfo}>
               <img src={id} className={styles.imgItem}/>
-              <div className={styles.desc}>Proposed Name:</div>
+              <div className={styles.desc}>Proposed Token Name:</div>
             </li>
             <div className={styles.value}>{this.state.start ? tool.convertTokenNum2Name(this.state.auctionStateInfo.tokenId) : 'N / A'}</div>
           </li>
@@ -206,7 +227,7 @@ export default class Banner extends Component {
           <li className={styles.navItem}>
             <li className={styles.auctionInfo}>
               <img src={leftime} className={styles.imgItem}/>
-              <div className={styles.desc}>Time Left:</div>
+              <div className={styles.desc}>End Time:</div>
             </li>
             <div className={styles.value}>{this.state.start ? tool.displayDate(this.state.auctionStateInfo.endTime) : 'N / A'}</div>
           </li>
@@ -228,7 +249,7 @@ export default class Banner extends Component {
           </li> */}
           
           <li className={styles.bidInfo}>
-            <Input disabled={this.state.paused} style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', width: '250px', height: '25px'}} 
+            <Input disabled={this.state.paused || this.state.bEnd} style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', width: '250px', height: '25px'}} 
                    placeholder="Token Name" onChange={this.changeTokenName.bind(this)}/>
             {
               this.state.checkImgVisible ? 
@@ -236,7 +257,7 @@ export default class Banner extends Component {
                   width: '250px', height: '60px', fontSize: '20px', color: '#00C4FF'
                   }} onClick={this.check.bind(this)}>
                     {
-                      this.state.paused ? 
+                      (this.state.paused || this.state.bEnd) ? 
                         <li className={styles.checkItem}>
                           Check Availability 
                         </li>   
@@ -248,11 +269,11 @@ export default class Banner extends Component {
                     }                                          
                 </Button>
                    :
-                <Button disabled={this.state.paused} type='secondary' style={{ borderRadius: '100px', backgroundColor: 'transparent', 
-                  width: '250px', height: '60px', fontSize: '20px', border: '2px solid ' + (this.state.paused ? this.state.pausedColor : '#00C4FF'), 
+                <Button disabled={this.state.paused || this.state.bEnd} type='secondary' style={{ borderRadius: '100px', backgroundColor: 'transparent', 
+                  width: '250px', height: '60px', fontSize: '20px', border: '2px solid ' + ((this.state.paused || this.state.bEnd) ? this.state.pausedColor : '#00C4FF'), 
                   color: '#00C4FF'}} onClick={this.check.bind(this)}>                  
                   {
-                    this.state.paused ? 
+                    (this.state.paused || this.state.bEnd) ? 
                       <div style={{color: this.state.pausedColor}}>Check Availability </div>
                         :
                       'Check Availability'
@@ -262,7 +283,7 @@ export default class Banner extends Component {
           </li>
           
           <li className={styles.bidInfo} style={{width: 700}}>
-            <Input disabled={this.state.paused} style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', width: '250px', height: '25px'}} 
+            <Input disabled={this.state.paused || this.state.bEnd} style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', width: '250px', height: '25px'}} 
                    placeholder="Bid Price"  onChange={this.changeBidPrice.bind(this)}/>
             <p style={{color: 'white', width: 400}}>
             Will check your remaining QKC in auction system smart contract and use them first when possible, 
@@ -271,7 +292,7 @@ export default class Banner extends Component {
   
           <li className={styles.bidBtn}>
             {
-              !this.state.paused ? 
+              (!this.state.paused && !this.state.bEnd) ? 
                 <Button text onClick={this.bidNow.bind(this)}>
                   <div className={styles.bidLink}>
                     <i style={{color: '#00C4FF'}}><b>Bid Now</b></i>
@@ -279,11 +300,21 @@ export default class Banner extends Component {
                   </div>
                 </Button>
                    :
+                (
+                this.state.paused ?
                 <Button text >
                   <div className={styles.bidLink}>
                     <i style={{color: this.state.pausedColor}}><b>Paused</b></i>
                   </div>
                 </Button>
+                  :
+                <Button text onClick={this.endAuction.bind(this)}>
+                  <div className={styles.bidLink}>
+                    <i style={{color: '#00C4FF'}}><b>Start New Round</b></i>
+                    <img src={jiantou} className={styles.bidImgItem}/>
+                  </div>
+                </Button>
+                )
             }
             
           </li>

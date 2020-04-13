@@ -183,7 +183,7 @@ export default class MyTokens extends Component {
                     </Button>
                     :
                     ""
-              }
+                }
               </li>
             </div> 
           : 

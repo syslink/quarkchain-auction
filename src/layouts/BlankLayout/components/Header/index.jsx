@@ -31,7 +31,9 @@ export default class Header extends Component {
       qkcWeb3.eth.getAccounts().then(accounts => {
         this.setState({curAccount : accounts[0]});
         Contracts.NonReservedNativeTokenManager.balances(accounts[0]).then(balance => {
-          this.setState({balance: balance.toString(10)});
+          Contracts.NonReservedNativeTokenManager.getAuctionState().then(auctionState => {
+            this.setState({balance: auctionState[2] == accounts[0] ? 0 : balance.toString(10)});
+          });
         });
       });  
     });
@@ -58,7 +60,7 @@ export default class Header extends Component {
       });
       return;
     }
-    history.push('/mytoken?' + this.state.tokenName);
+    history.push('/Exchange?' + this.state.tokenName);
   }
 
   showTokenAuction = () => {
@@ -76,7 +78,9 @@ export default class Header extends Component {
   handleVisibleChange(visible) {
     if (visible) {
       Contracts.NonReservedNativeTokenManager.balances(this.state.curAccount).then(balance => {
-        this.setState({balance: balance.toString(10)});
+        Contracts.NonReservedNativeTokenManager.getAuctionState().then(auctionState => {
+          this.setState({balance: auctionState[2] == this.state.curAccount ? 0 : balance.toString(10)});
+        });
       });
     }
   }

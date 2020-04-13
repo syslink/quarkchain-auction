@@ -7,9 +7,6 @@ import * as Contracts from './contracts';
 export function initQkcWeb3() {
   if (window.web3) {
     qkcWeb3 = new Web3(window.web3);
-    qkcWeb3.eth.getAccounts().then(accounts => {
-      console.log('account:' + accounts[0]);
-    })
     QuarkChain.injectWeb3(qkcWeb3, 'http://jrpc.devnet.quarkchain.io:38391');        
     Contracts.initContractObj(qkcWeb3).then(result => {
       console.log('initContractObj success');

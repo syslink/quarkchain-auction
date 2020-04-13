@@ -22,16 +22,19 @@ export default class Exchange extends Component {
       registerVisible: false,
       exchangeRateVisible: false,
       depositGasReserveVisible: false,
+      mintTokenVisible: false,
       curBalance: 0,
       curShardIndex: 0,
-      allShardsInfo:  [{admin: '', exchangeRate: 0, gasReserve: 0, refundRate: 0, needRegister: true},
-                       {admin: '', exchangeRate: 0, gasReserve: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, gasReserve: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, gasReserve: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, gasReserve: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, gasReserve: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, gasReserve: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, gasReserve: 0, refundRate: 0, needRegister: true}],
+      minGasReserveMaintain: new BigNumber(0),
+      minGasReserveInit: new BigNumber(0),
+      allShardsInfo:  [{admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true},
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}],
       registerFooter: (<view style={{marginRight: '30px', marginBottom: '80px'}}>
         <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: '#00C4FF', 
           width: '120px', height: '50px', fontSize: '20px',
@@ -68,6 +71,18 @@ export default class Exchange extends Component {
           OK
         </Button>
       </view>),
+      mintTokenFooter: (<view style={{marginRight: '40px', marginBottom: '80px'}}>
+      <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: '#00C4FF', 
+        width: '120px', height: '50px', fontSize: '20px',
+        color: '#FFFFFF', marginRight: '20px'}} onClick={() => this.setState({mintTokenVisible: false})}>                  
+        Cancel
+      </Button>
+      <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: '#00C4FF', 
+        width: '120px', height: '50px', fontSize: '20px',
+        color: '#FFFFFF'}} onClick={this.mintToken.bind(this)}>                  
+        OK
+      </Button>
+    </view>),
     };
   }
   componentDidMount = () => {
@@ -82,49 +97,64 @@ export default class Exchange extends Component {
   getData = () => {
     if (this.state.tokenName == '') return;
     Contracts.initContractObj(tool.qkcWeb3).then(result => {
+      this.state.tokenId = tool.convertTokenName2Num(this.state.tokenName);
       tool.qkcWeb3.eth.getAccounts().then(accounts => {
-        this.state.tokenId = tool.convertTokenName2Num(this.state.tokenName);
-        tool.qkcWeb3.eth.getAccounts().then(accounts => {
-          Contracts.NonReservedNativeTokenManager.getNativeTokenInfo(this.state.tokenId).then(tokenInfo => {
-            console.log(tokenInfo);
-            tokenInfo.createTime = tokenInfo[0].toNumber();
-            tokenInfo.owner = tokenInfo[1];
-            tokenInfo.totalSupply = tokenInfo[2];
-            if (tokenInfo.createTime == 0) {
-              Notification.config({placement: 'br'});
-              Notification.open({
-                title: 'Warning',
-                content: 'There is no token with this name.',
-                type: 'warning',
-                duration: 0
-              });
-            } else {
-              tokenInfo.tokenName = this.state.tokenName;
-              tokenInfo.curAccount = accounts[0];
-              this.setState({tokenInfo})
-            }
+        console.log(accounts);
+        Contracts.NonReservedNativeTokenManager.getNativeTokenInfo(this.state.tokenId).then(tokenInfo => {
+          console.log(tokenInfo);
+          tokenInfo.createTime = tokenInfo[0].toNumber();
+          tokenInfo.owner = tokenInfo[1];
+          tokenInfo.totalSupply = tokenInfo[2];
+          if (tokenInfo.createTime == 0) {
+            Notification.config({placement: 'br'});
+            Notification.open({
+              title: 'Warning',
+              content: 'There is no token with this name.',
+              type: 'warning',
+              duration: 0
+            });
+          } else {
+            tokenInfo.tokenName = this.state.tokenName;
+            tokenInfo.curAccount = accounts[0];
+            this.setState({tokenInfo})
+          }
+        });
+
+        for (let i = 0; i < Contracts.GeneralNativeTokenManagers.length; i++) {
+          const GeneralNativeTokenManager = Contracts.GeneralNativeTokenManagers[i];
+          GeneralNativeTokenManager.minGasReserveMaintain().then(minGasReserveMaintain => {
+            this.setState({minGasReserveMaintain: new BigNumber(minGasReserveMaintain.toHexString(), 16)});
+          });
+          
+          GeneralNativeTokenManager.minGasReserveInit().then(minGasReserveInit => {
+            this.setState({minGasReserveInit: new BigNumber(minGasReserveInit.toHexString(), 16)});
           });
 
-          for (let i = 0; i < Contracts.GeneralNativeTokenManagers.length; i++) {
-            const GeneralNativeTokenManager = Contracts.GeneralNativeTokenManagers[i];
-            GeneralNativeTokenManager.registrationRequired().then(required => {
-              GeneralNativeTokenManager.registeredTokens(this.state.tokenId).then(registered => {
-                this.state.allShardsInfo[i].needRegister = required && !registered;
-                GeneralNativeTokenManager.gasReserves(this.state.tokenId).then(gasReserve => {
-                  this.state.allShardsInfo[i].admin = gasReserve.admin;
-                  const exchangeRate = !gasReserve.exchangeRate.denominator.isZero() ? gasReserve.exchangeRate.numerator.toNumber() * 100 / gasReserve.exchangeRate.denominator.toNumber() : 0;
-                  this.state.allShardsInfo[i].exchangeRate = exchangeRate;// != 0 ? exchangeRate.mul(100).toNumber() : 0;
-                  this.state.allShardsInfo[i].refundRate = gasReserve.refundPercentage.toNumber();
-                  GeneralNativeTokenManager.gasReserveBalance([this.state.tokenId, accounts[0]]).then(gasReserve => {
-                    this.state.allShardsInfo[i].gasReserve = new BigNumber(gasReserve.toHexString(), 16).shiftedBy(-18).toNumber();
-                    this.setState({allShardsInfo: this.state.allShardsInfo});
-                  });
+          GeneralNativeTokenManager.registrationRequired().then(required => {
+            GeneralNativeTokenManager.registeredTokens(this.state.tokenId).then(registered => {
+              this.state.allShardsInfo[i].needRegister = required && !registered;
+              GeneralNativeTokenManager.gasReserves(this.state.tokenId).then(gasReserve => {
+                this.state.allShardsInfo[i].admin = gasReserve.admin;
+                const exchangeRate = !gasReserve.exchangeRate.denominator.isZero() ? gasReserve.exchangeRate.numerator.toNumber() / gasReserve.exchangeRate.denominator.toNumber() : 0;
+                this.state.allShardsInfo[i].exchangeRate = exchangeRate;// != 0 ? exchangeRate.mul(100).toNumber() : 0;
+                this.state.allShardsInfo[i].refundRate = gasReserve.refundPercentage.toNumber();
+                GeneralNativeTokenManager.gasReserveBalance([this.state.tokenId, gasReserve.admin]).then(gasReserve => {
+                  this.state.allShardsInfo[i].adminGasReserve = new BigNumber(gasReserve.toHexString(), 16).shiftedBy(-18).toNumber();
+                  this.setState({allShardsInfo: this.state.allShardsInfo});
+                });
+                GeneralNativeTokenManager.gasReserveBalance([this.state.tokenId, accounts[0]]).then(gasReserve => {
+                  this.state.allShardsInfo[i].userGasReserve = new BigNumber(gasReserve.toHexString(), 16).shiftedBy(-18).toNumber();
+                  this.setState({allShardsInfo: this.state.allShardsInfo});
+                });
+                GeneralNativeTokenManager.nativeTokenBalance([this.state.tokenId, accounts[0]]).then(balance => {
+                  this.state.allShardsInfo[i].userNativeTokenBalance = new BigNumber(balance.toHexString(), 16).shiftedBy(-18).toNumber();
+                  this.setState({allShardsInfo: this.state.allShardsInfo});
                 });
               });
             });
-          }
-        });  
-      });    
+          });
+        }
+      });   
     });
   }
 
@@ -143,6 +173,58 @@ export default class Exchange extends Component {
           type: 'success',
           duration: 0
       });
+    }).catch(error => {
+      if (error.code == 4001) return;
+      tool.displayErrorInfo(error);
+    });
+  }
+
+  withdrawNativeToken = (shardIndex) => {
+    Contracts.GeneralNativeTokenManagers[shardIndex].withdrawNativeToken(this.state.tokenId, {}).then(txId => {
+      if (new BigNumber(txId, 16).toNumber() == 0) {
+        tool.displayErrorInfo('Fail to send transaction.');
+        return;
+      }
+
+      Notification.config({placement: 'br'});
+      Notification.open({
+          title: 'Success',
+          content:
+          <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
+          type: 'success',
+          duration: 0
+      });
+    }).catch(error => {
+      if (error.code == 4001) return;
+      tool.displayErrorInfo(error);
+    });
+  }
+
+  changeMintTokenAmount = (v) => {
+    this.state.mintedTokenAmount = v;
+  }
+
+  mintToken = () => {
+    const valid = /^[1-9][0-9]*$/.test(this.state.mintedTokenAmount);
+    if (!valid) {
+      tool.displayErrorInfo('Token amount only can be a number.');
+      return;
+    }
+    const amount = '0x' + new BigNumber(this.state.mintedTokenAmount).shiftedBy(18).toString(16);
+    Contracts.NonReservedNativeTokenManager.mintNewToken([this.state.tokenId, amount], {}).then(txId => {
+      if (new BigNumber(txId, 16).toNumber() == 0) {
+        tool.displayErrorInfo('Fail to send transaction.');
+      } else {
+        this.setState({mintTokenVisible: false});
+        Notification.config({placement: 'br'});
+        Notification.open({
+            title: 'Result of Transaction',
+            content:
+            <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
+            type: 'success',
+            duration: 0
+        });
+      }
     }).catch(error => {
       if (error.code == 4001) return;
       tool.displayErrorInfo(error);
@@ -212,13 +294,18 @@ export default class Exchange extends Component {
       tool.displayErrorInfo('Exchange rate is wrong.');
       return;
     }
-    valid = /^[1-9][0-9]*$/.test(this.state.gasReserveAmountValue);
+    valid = /^[0-9]*$/.test(this.state.gasReserveAmountValue);
     if (!valid) {
       tool.displayErrorInfo('Gas reserve amount is wrong.');
       return;
     }
 
-    if (this.state.allShardsInfo[this.state.curShardIndex].exchangeRate >= this.state.exchangeRateValue * 100) {
+    if (this.state.minGasReserveMaintain.isGreaterThan(new BigNumber(this.state.allShardsInfo[this.state.curShardIndex].adminGasReserve).shiftedBy(18))) {
+      if (this.state.minGasReserveInit.isGreaterThan(new BigNumber(this.state.gasReserveAmountValue + this.state.allShardsInfo[this.state.curShardIndex].userGasReserve).shiftedBy(18))) {
+        tool.displayErrorInfo('Gas reserve amount cannot be less than ' + this.state.minGasReserveInit);
+        return;
+      }
+    } else if (this.state.allShardsInfo[this.state.curShardIndex].exchangeRate >= this.state.exchangeRateValue) {
       tool.displayErrorInfo('Exchange rate must be bigger than the current value.');
       return;
     }
@@ -279,19 +366,30 @@ export default class Exchange extends Component {
               </li>
               <div className={styles.value}>{tool.displayDate(this.state.tokenInfo.createTime)}</div>
             </li>
-            {/* <li className={styles.navItem}>
-              <li className={styles.auctionInfo}>
-                <div className={styles.desc}>Auctioned Price:</div>
-              </li>
-              <div className={styles.value}>50000 QKC</div>
-            </li> */}
             <li className={styles.navItem}>
+              <li className={styles.auctionInfo}>
+                <div className={styles.desc}>Owner:</div>
+              </li>
+                <div className={styles.value}>{tool.displayShortAddr(this.state.tokenInfo.owner)}</div>
+            </li>
+            <li className={styles.navItem} style={{width: this.state.tokenInfo.owner == this.state.tokenInfo.curAccount ? '500px' : '400px'}}>
               <li className={styles.navItem}>
                 <li className={styles.auctionInfo}>
                   <div className={styles.desc}>Total Supply:</div>
                 </li>
                 <div className={styles.value}>{tool.convert2BaseUnit(this.state.tokenInfo.totalSupply)}</div>
               </li>
+              
+              {
+                  this.state.tokenInfo.owner == this.state.tokenInfo.curAccount ? 
+                    <Button text style={{ color: '#00C4FF'}} style={{ color: '#00C4FF', marginTop: '-25px', marginLeft: '30px'}} 
+                      onClick={() => this.setState({mintTokenVisible: true})}>                  
+                      Mint Token >>
+                    </Button>
+                    :
+                    ""
+                }
+
             </li>
           </div> 
           <div>
@@ -304,14 +402,22 @@ export default class Exchange extends Component {
             <Row align='center'>
               <div className={styles.shardTitle}>Shard {i}</div>
               <img src={greenIcon} className={styles.iconItem}/>
+              {
+                oneShard.needRegister ?  
+                  <Button text style={{ color: '#00C4FF', marginLeft: '40px'}} onClick={() => this.setState({registerVisible: true})}>                  
+                  Register >>
+                  </Button>
+                  :
+                  ''
+              }
             </Row>
             <Row style={{marginTop: '20px'}}>
-              <Col>
-                  <div className={styles.value}>Admin: {tool.displayShortAddr(oneShard.admin)}</div>
+              <Col span='14'>
+                  <div className={styles.value}>Liquidity Provider: {tool.displayShortAddr(oneShard.admin)}</div>
               </Col>
-              <Col>
+              <Col span='10'>
                 <Row justify='start'>
-                  <div style={{ width: '200px'}} className={styles.value}>Exchange Rate: {oneShard.exchangeRate}%</div>
+                  <div style={{ width: '200px'}} className={styles.value}>{this.state.tokenName}/QKC: {oneShard.exchangeRate}</div>
                   {
                     oneShard.needRegister ?                   
                       ''
@@ -324,52 +430,48 @@ export default class Exchange extends Component {
               </Col>
             </Row>
             <Row>
-              <Col>
+              <Col span='14'>
                 <Row justify='start'>
-                  <div  style={{ width: '200px'}} className={styles.nextValue}>Gas Reserve: {oneShard.gasReserve} QKC</div>
-                  {
-                    oneShard.needRegister ?                   
-                      ''
-                        :
-                      <Button text style={{ color: '#00C4FF'}} onClick={() => this.setState({depositGasReserveVisible: true, curShardIndex: i})}>                  
-                      Deposit >>
-                      </Button>
-                  }
-                  
+                  <div  style={{ width: '300px'}} className={styles.nextValue}>Remaining Gas Reserve: {oneShard.adminGasReserve} QKC</div>
+                 
                 </Row>
               </Col>
-              <Col>
+              <Col span='10'>
                 <Row align='center'>
                   <div style={{ width: '200px'}}  className={styles.nextValue}>Refund Rate: {oneShard.refundRate}%</div>
                 </Row>
               </Col>
             </Row>
-            <Row>
-              <Col>
-                <Row justify='start' style={{marginTop: '20px'}}>                
-                  <div style={{ width: '200px'}} className={styles.nextValue}>Balance: {oneShard.gasReserve} QKC</div>
-                  {
-                        oneShard.needRegister ?                   
-                          ''
-                            :
-                        <Button text style={{ color: '#00C4FF'}} onClick={this.withdraw.bind(this, i)}>                  
-                        Withdraw >>
-                        </Button>
-                  }
-                </Row>
-              </Col>
-              <Col>
-                <Row align='center' style={{marginTop: '20px'}}>
-                  {
-                    oneShard.needRegister ?                   
-                      <Button text style={{ color: '#00C4FF', marginLeft: '200px'}} onClick={this.register.bind(this, i)}>                  
-                      Register >>
-                      </Button>
-                        :
-                      ''
-                  }
-                </Row>
-              </Col>
+            <hr style={{ width: '100%', marginTop: '20px'}}/>
+            <Row justify='start' style={{marginTop: '20px'}}>                
+              <div  style={{ width: '300px'}} className={styles.nextValue}>User Gas Reserve: {oneShard.userGasReserve} QKC</div>
+                {
+                  oneShard.needRegister ?                   
+                    ''
+                      :
+                    <Button text style={{ color: '#00C4FF'}} onClick={() => this.setState({depositGasReserveVisible: true, curShardIndex: i})}>                  
+                    Deposit >>
+                    </Button>
+                }
+                {
+                  oneShard.needRegister ?                   
+                    ''
+                      :
+                    <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={this.withdraw.bind(this, i)}>                  
+                    Withdraw >>
+                    </Button>
+                }
+            </Row>
+            <Row justify='start' style={{marginTop: '20px'}}>                
+                <div  style={{ width: '300px'}} className={styles.nextValue}>User Native Token Balance: {oneShard.userNativeTokenBalance} {this.state.tokenName}</div>
+                {
+                  oneShard.needRegister ?                   
+                    ''
+                      :
+                    <Button text style={{ color: '#00C4FF'}} onClick={this.withdrawNativeToken.bind(this, i)}>                  
+                    Withdraw >>
+                    </Button>
+                }
             </Row>
           </div> 
          )
@@ -386,7 +488,7 @@ export default class Exchange extends Component {
           footer={this.state.registerFooter}
         >
           <Input autoFocus style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '85%', height: '25px'}} 
-                 placeholder="Token Amount"
+                 innerBefore="Token Amount:"
                  onChange={this.changeTokenAmount.bind(this)}
                  innerAfter={<div fontSize='20'>{this.state.tokenInfo.tokenName}</div>}
                  onPressEnter={this.sendRegisterTx.bind(this)}/>
@@ -406,7 +508,7 @@ export default class Exchange extends Component {
           footer={this.state.depositGasReserveFooter}
         >
           <Input autoFocus style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '85%', height: '25px'}} 
-                 placeholder="Token Amount"
+                 innerBefore="Token Amount:"
                  onChange={this.changeTokenAmount.bind(this)}
                  innerAfter='QKC'
                  onPressEnter={this.depositGasReserve.bind(this)}/>
@@ -423,16 +525,37 @@ export default class Exchange extends Component {
           footer={this.state.exchangeRateFooter}
         >
           <Input autoFocus style={{borderRadius: '100px', padding: '15px 32px', margin: '0 20px 10px 30px', width: '85%', height: '25px'}} 
-                 placeholder="Exchange Rate"
+                 innerBefore="Exchange Rate:"
                  onChange={this.onChangeExchangeRate.bind(this)}/>
           <Input style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '85%', height: '25px'}} 
-                placeholder="Gas Reserve Amount"
+                innerBefore="Gas Reserve Amount:"
                 onChange={this.onChangeGasReserveAmount.bind(this)}
                 onPressEnter={this.changeExchangeRate.bind(this)}/>
-          <p style={{fontSize: 14, color: '#FB7C6E', lineHeight: '180%', marginRight: 30, marginLeft: 30}}>
-          Must be more than 500 QKC
+          <p style={{fontSize: 14, color: '#FB7C6E', lineHeight: '180%', marginRight: 30, marginLeft: 30}}>           
+          The amount of gas reserve should >= {this.state.minGasReserveInit.toString()} QKC
           </p>
         </Dialog>
+
+        <Dialog style={{ width: "35%" }}
+          visible={this.state.mintTokenVisible}
+          closeable="esc,mask"
+          //onOk={() => this.setState({mintTokenVisible: false})}
+          onCancel={() => this.setState({mintTokenVisible: false})}
+          onClose={() => this.setState({mintTokenVisible: false})}
+          title='Mint Token'
+          footerAlign='right'
+          footer={this.state.mintTokenFooter}
+        >
+          <Input autoFocus style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '85%', height: '25px'}} 
+                 innerBefore="Token Amount:"
+                 onChange={this.changeMintTokenAmount.bind(this)}
+                 onPressEnter={this.mintToken.bind(this)}/>
+          <p style={{fontSize: 20, lineHeight: '180%', marginRight: 30, marginLeft: 30}}>
+          Mint as many new tokens as you want, once the mint transaction succeeded, you can find those new thokens on 
+          your current address!
+          </p>
+        </Dialog>
+
       </div>
     );
   }
