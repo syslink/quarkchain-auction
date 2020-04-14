@@ -107,7 +107,7 @@ export default class Header extends Component {
       }
     }).catch(error => {
       if (error.code == 4001) return;
-      tool.displayErrorInfo(error);
+      tool.displayErrorInfo(error.message);
     });
   }
 
