@@ -1,8 +1,8 @@
 ### 代码结构
 
-整体代码框架来自于：https://ice.work/
+代码框架来自于：https://ice.work/
 
-在本项目中，同业务相关的代码主要包括一下三部分：
+在本项目中，同业务相关的代码主要包括以下三部分：
 
 1. src\layouts\BlankLayout\components\\**Header**\index.jsx
 > 此部分代码包含了搜索框以及账户可提取的余额
