@@ -110,7 +110,7 @@ function buildContractObj(networkId, qkcWeb3, myContract, contractAbi, contractA
         myContract[funcName] = (parameterValues, {transferTokenId, transferAmount, fullShardKey}) => {
           if (myContract.fromAddr == tools.InvalidAddr) {
             return new Promise(function(resolve, reject) {
-              reject(new Error('Please check whether MetaMask has been installed and login, or the website has been added to its connections.'));
+              reject(new Error(tools.MetamaskErrorInfo));
             })
           }
           if (parameterValues == null) {
@@ -174,7 +174,7 @@ async function initContractObj (qkcWeb3) {
   const networkId = networkInfo.networkId;
   const accounts = await qkcWeb3.eth.getAccounts();
   if (accounts == null || accounts.length == 0) {
-    tools.displayErrorInfo('Please check whether MetaMask has been installed and login.');
+    tools.displayErrorInfo(tools.MetamaskErrorInfo);
     generateContractInterface(qkcWeb3, networkId, tools.InvalidAddr);
     Status.InitSuccess = true;
     return false;
