@@ -49,7 +49,8 @@ export default class Banner extends Component {
   }
   
   componentDidMount = async () => {
-    await Contracts.initContractObj(tool.qkcWeb3);
+    const result = await Contracts.initContractObj(tool.qkcWeb3);
+    if (!result) return;
     const auctionParams = await Contracts.NonReservedNativeTokenManager.auctionParams();
     console.log(auctionParams);
     auctionParams.duration = auctionParams[0].toNumber();
@@ -70,7 +71,6 @@ export default class Banner extends Component {
     if (auctionState.endTime > 946656000) {  // 946656000=2000/1/1, 小于此值说明处于第0轮,或者是调用了endAuction，round不需要变更
       this.state.bEnd = this.isOutOfTime(auctionState.endTime);             // 当前一轮已经结束，并且为pause的时候，应该start new round
       paused = await Contracts.NonReservedNativeTokenManager.isPaused();    // pause的时候，既不能endAuction，也不能bid
-      //if (!this.state.bEnd) start = true;
     } else {
       start = false;
     }
@@ -78,7 +78,10 @@ export default class Banner extends Component {
     this.setState({auctionStateInfo: auctionState, start, paused, curRound, auctionParams, bEnd: this.state.bEnd});
 
     qkcWeb3.eth.getAccounts().then(accounts => {
-      this.setState({curAccount : accounts[0]});
+      if (accounts == null || accounts.length == 0) {
+        return;
+      }
+      this.setState({curAccount : accounts[0], highestBidderIsMe: auctionState.addrOfHighestBid == accounts[0]});
     });  
   }
 
@@ -129,31 +132,18 @@ export default class Banner extends Component {
         tool.displayErrorInfo('Fail to send transaction.');
       } else {
         this.setState({mintTokenVisible: false});
-        Notification.config({placement: 'br'});
-        Notification.open({
-            title: 'Result of Transaction',
-            content:
-            <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
-            type: 'success',
-            duration: 0
-        });
+        tool.displayTxInfo(txId);
       }
     }).catch(error => {
       if (error.code == 4001) return;
-      tool.displayErrorInfo(error);
+      tool.displayErrorInfo(error.message);
     });
   }
   
   bidNow = () => {
     const valid = /[0-9A-Z]{5,12}$/.test(this.state.tokenName);
     if (!valid) {
-      Notification.config({placement: 'br'});
-      Notification.open({
-        title: 'Error',
-        content: 'Token name only can be a mix of capital letters and numbers with length between 5 and 12.',
-        type: 'error',
-        duration: 0
-      });
+      tool.displayErrorInfo('Token name only can be a mix of capital letters and numbers with length between 5 and 12.');
       return;
     }
     this.state.highestBidderIsMe = this.state.auctionStateInfo.addrOfHighestBid == this.state.curAccount;
@@ -187,18 +177,11 @@ export default class Banner extends Component {
           tool.displayErrorInfo('Fail to send transaction.');
         } else {
           this.setState({mintTokenVisible: false});
-          Notification.config({placement: 'br'});
-          Notification.open({
-              title: 'Result of Transaction',
-              content:
-              <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
-              type: 'success',
-              duration: 0
-          });
+          tool.displayTxInfo(txId);
         }
       }).catch(error => {
         if (error.code == 4001) return;
-        tool.displayErrorInfo(error);
+        tool.displayErrorInfo(error.message);
       });
   }
 
@@ -237,7 +220,14 @@ export default class Banner extends Component {
               <img src={bidder} className={styles.imgItem}/>
               <div className={styles.desc}>Highest Bidder:</div>
             </li>
-            <div className={styles.value}>{this.state.start ? tool.displayShortAddr(this.state.auctionStateInfo.addrOfHighestBid) : 'N / A'}</div>
+            <div className={styles.value}>{this.state.start ? 
+                                            <a style={{color: 'rgb(220, 187, 93)'}} href={tool.QuarkChainNetwork + 'address/' 
+                                            + this.state.auctionStateInfo.addrOfHighestBid + Contracts.NonReservedNativeTokenManager.fullShardKey} target='_blank'>
+                                                {tool.displayShortAddr(this.state.auctionStateInfo.addrOfHighestBid)}
+                                            </a> 
+                                                : 
+                                            'N / A'}
+            </div>
           </li>
   
           {/* <li className={styles.navItem}>
@@ -310,7 +300,13 @@ export default class Banner extends Component {
                   :
                 <Button text onClick={this.endAuction.bind(this)}>
                   <div className={styles.bidLink}>
-                    <i style={{color: '#00C4FF'}}><b>Start New Round</b></i>
+                    {
+                    this.state.highestBidderIsMe ? 
+                      <i style={{color: '#00C4FF'}}><b>End Auction</b></i>
+                      :
+                      <i style={{color: '#00C4FF'}}><b>Start New Round</b></i>
+                    }
+                    
                     <img src={jiantou} className={styles.bidImgItem}/>
                   </div>
                 </Button>
@@ -321,7 +317,7 @@ export default class Banner extends Component {
         </div>
         <div className={styles.content} style={{color: 'white', paddingLeft: 120}}>
           <div className={styles.title} style={{fontSize: 30}}>Rules:</div>
-          <p style={{fontSize: 18, lineHeight: '150%'}}>1. You can start next token auction by bidding at least 5000 QKC.</p>
+          <p style={{fontSize: 18, lineHeight: '150%'}}>1. You can start next token auction by bidding at least {this.state.auctionParams.minPriceInQKC} QKC.</p>
           <br/>
           <p style={{fontSize: 18, lineHeight: '150%'}}>
             2. The auction process lasts at least one week, the bidder with the highest price wins the auction, 
@@ -330,7 +326,7 @@ export default class Banner extends Component {
           <br/>
           <p style={{fontSize: 18, lineHeight: '150%'}}>3. If there is a new valid bid during the last five minutes of the auction, it will extend five more minutes.</p>
           <br/>
-          <p style={{fontSize: 18, lineHeight: '150%'}}>4. A new bid price needs to be at least 5 percent more than the current.</p>
+          <p style={{fontSize: 18, lineHeight: '150%'}}>4. A new bid price needs to be at least {this.state.auctionParams.minIncrementInPercent} percent more than the current.</p>
         </div>
         <Dialog style={{ width: "25%" }}
           visible={this.state.confimationVisible}

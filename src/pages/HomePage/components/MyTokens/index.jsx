@@ -46,7 +46,11 @@ export default class MyTokens extends Component {
   getData = () => {
     if (this.state.tokenName == '') return;
     Contracts.initContractObj(tool.qkcWeb3).then(result => {
+      if (!result) return;
       tool.qkcWeb3.eth.getAccounts().then(accounts => {
+        if (accounts == null || accounts.length == 0) {
+          return;
+        }
         const tokenId = tool.convertTokenName2Num(this.state.tokenName);
         Contracts.NonReservedNativeTokenManager.getNativeTokenInfo([tokenId]).then(tokenInfo => {
           console.log(tokenInfo);
@@ -92,18 +96,11 @@ export default class MyTokens extends Component {
         tool.displayErrorInfo('Fail to send transaction.');
       } else {
         this.setState({mintTokenVisible: false});
-        Notification.config({placement: 'br'});
-        Notification.open({
-            title: 'Result of Transaction',
-            content:
-            <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
-            type: 'success',
-            duration: 0
-        });
+        tool.displayTxInfo(txId);
       }
     }).catch(error => {
       if (error.code == 4001) return;
-      tool.displayErrorInfo(error);
+      tool.displayErrorInfo(error.message);
     });
   }
 

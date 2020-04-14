@@ -1,4 +1,6 @@
-var provider = 'http://jrpc.devnet.quarkchain.io:38391';
+import * as global from './global';
+
+const provider = global.QuarkChainRPC;
 
 function setProvider(newProvider) {
   provider = newProvider;
@@ -86,7 +88,7 @@ async function getAllTransaction(fullShardKey, start, limit) {
 };
 
 async function postToNode(dataToNode) {
-  const resp = await fetch(provider, {headers: { "Content-Type": "application/json;charset=UTF-8" }, method: 'POST', body: dataToNode.data});
+  const resp = await fetch(global.QuarkChainRPC, {headers: { "Content-Type": "application/json;charset=UTF-8" }, method: 'POST', body: dataToNode.data});
   if (resp == null) {
     throw dataToNode.data;
   }

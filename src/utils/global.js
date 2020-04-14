@@ -1,13 +1,18 @@
+import React, { Component } from 'react';
 import { Message, Notification } from '@alifd/next';
 import Web3 from 'web3';
-import QuarkChain from 'quarkchain-web3';
+import QuarkChain from 'quarkchain-web3-beta';
 import BigNumber from 'bignumber.js';
 import * as Contracts from './contracts';
+
+export const QuarkChainNetwork = 'https://devnet.quarkchain.io/';
+export const QuarkChainRPC = 'http://jrpc.devnet.quarkchain.io:38391';
+export const InvalidAddr = '0x0000000000000000000000000000000000000000';
 
 export function initQkcWeb3() {
   if (window.web3) {
     qkcWeb3 = new Web3(window.web3);
-    QuarkChain.injectWeb3(qkcWeb3, 'http://jrpc.devnet.quarkchain.io:38391');        
+    QuarkChain.injectWeb3(qkcWeb3, QuarkChainRPC);        
     Contracts.initContractObj(qkcWeb3).then(result => {
       console.log('initContractObj success');
     });
@@ -60,7 +65,8 @@ export function displayDate(dateTime) {
 }
 
 export function displayShortAddr(addr) {
-  return addr.substr(0, 6) + '...' + addr.substr(addr.length - 5);
+  const simpleAddr = addr.substr(0, 12) + '...';
+  return simpleAddr;
 }
 
 export function convert2BaseUnit(value) {
@@ -78,6 +84,18 @@ export function displayErrorInfo(error) {
     content: error,
     type: 'error',
     duration: 0
+  });
+}
+
+
+export function displayTxInfo(txId) {
+  const content = <a href={QuarkChainNetwork + 'tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>;
+  Notification.config({placement: 'br'});
+  Notification.open({
+      title: 'Result of Transaction',
+      content,
+      type: 'success',
+      duration: 0
   });
 }
 

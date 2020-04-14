@@ -28,7 +28,11 @@ export default class Header extends Component {
 
   componentDidMount = () => {  
     Contracts.initContractObj(tool.qkcWeb3).then(result => {
+      if (!result) return;
       qkcWeb3.eth.getAccounts().then(accounts => {
+        if (accounts == null || accounts.length == 0) {
+          return;
+        }
         this.setState({curAccount : accounts[0]});
         Contracts.NonReservedNativeTokenManager.balances(accounts[0]).then(balance => {
           Contracts.NonReservedNativeTokenManager.getAuctionState().then(auctionState => {
@@ -40,6 +44,9 @@ export default class Header extends Component {
   }
 
   displayAccountAddr = () => {
+    if (this.state.curAccount == null) {
+      return 'No Account';
+    }
     const len = this.state.curAccount.length;
     return this.state.curAccount.substr(0, 6) + '...' + this.state.curAccount.substr(len - 4);
   }
@@ -67,7 +74,6 @@ export default class Header extends Component {
     this.setState({tokenAuctionActive: true});
     
     history.push('/');
-//    eventProxy.trigger('pageSelector', {type: 'showTokenAuction'});
   }
 
   showkMyTokens = () => {
@@ -84,7 +90,7 @@ export default class Header extends Component {
       });
     }
   }
-
+  // 提取账户余额
   withdrawAll = () => {
     Contracts.NonReservedNativeTokenManager.withdraw([], {transferTokenId: '0x8bb0'}).then(txId => {
       if (new BigNumber(txId, 16).toNumber() == 0) {
@@ -94,7 +100,7 @@ export default class Header extends Component {
         Notification.open({
             title: 'Result of Transaction',
             content:
-            <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
+            <a href={tool.QuarkChainNetwork + 'tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
             type: 'success',
             duration: 0
         });
@@ -106,7 +112,11 @@ export default class Header extends Component {
   }
 
   render () {
-    const accountInfoBtn = <Button className={styles.accountInfo} text iconSize='medium'> {this.displayAccountAddr()} </Button>
+    const dispayAccount = this.state.curAccount != null ? <a href={tool.QuarkChainNetwork + 'address/' 
+                                            + this.state.curAccount + Contracts.NonReservedNativeTokenManager.fullShardKey} target='_blank'>
+                                                {tool.displayShortAddr(this.state.curAccount)}
+                                            </a>  : 'No Account';
+    const accountInfoBtn = <Button className={styles.accountInfo} text iconSize='medium'> {dispayAccount} </Button>
     return (
       <div className={styles.header}>
         <div className={styles.logo}>
@@ -133,7 +143,7 @@ export default class Header extends Component {
             <img src={ACCOUNT} className={styles.accountImg}/>
             <Balloon trigger={accountInfoBtn} closable={false} onVisibleChange={this.handleVisibleChange.bind(this)}>
               <li className={styles.ballonItem}>
-                <p>Contract Balance</p>
+                <p>Balance in Contract</p>
                 <p>{tool.convert2BaseUnit(this.state.balance)} QKC</p>
                 <br/>
                 <Button text className={styles.activeNavItemLink} onClick={this.withdrawAll}>

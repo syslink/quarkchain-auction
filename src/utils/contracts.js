@@ -108,7 +108,12 @@ function buildContractObj(networkId, qkcWeb3, myContract, contractAbi, contractA
         
       } else {
         myContract[funcName] = (parameterValues, {transferTokenId, transferAmount, fullShardKey}) => {
-          if(parameterValues == null) {
+          if (myContract.fromAddr == tools.InvalidAddr) {
+            return new Promise(function(resolve, reject) {
+              reject(new Error('Please check whether MetaMask has been installed and login.'));
+            })
+          }
+          if (parameterValues == null) {
             parameterValues = [];
           }
           if (!(parameterValues instanceof Array)) {
@@ -160,7 +165,7 @@ async function initContractObj (qkcWeb3) {
       console.log('sleep for waitting init.');
       await tools.sleep(1000);
     }
-    return;
+    return true;
   };
   console.log('start to init.');
   Status.StartInit = true;
@@ -168,13 +173,26 @@ async function initContractObj (qkcWeb3) {
   const networkInfo = await qkcRpc.getNetworkId();
   const networkId = networkInfo.networkId;
   const accounts = await qkcWeb3.eth.getAccounts();
-  NonReservedNativeTokenManager.fromAddr = accounts[0];
+  if (accounts == null || accounts.length == 0) {
+    tools.displayErrorInfo('Please check whether MetaMask has been installed and login.');
+    generateContractInterface(qkcWeb3, networkId, tools.InvalidAddr);
+    Status.InitSuccess = true;
+    return false;
+  }
+
+  generateContractInterface(qkcWeb3, networkId, accounts[0]);
+  Status.InitSuccess = true;
+  return true;
+}
+
+function generateContractInterface(qkcWeb3, networkId, account) {
+  NonReservedNativeTokenManager.fromAddr = account;
 
   NonReservedNativeTokenManager.fullShardKey = '00000000';
 
   for (let i = 0; i < 8; i++) {
     GeneralNativeTokenManagers[i] = new Object();
-    GeneralNativeTokenManagers[i].fromAddr = accounts[0];
+    GeneralNativeTokenManagers[i].fromAddr = account;
     const contractAddr = GeneralNativeTokenManagerAddrs[i];
     GeneralNativeTokenManagers[i].fullShardKey = contractAddr.substr(contractAddr.length - 8);
     buildContractObj(networkId, qkcWeb3, GeneralNativeTokenManagers[i], GeneralNativeTokenManagerABI, contractAddr);
@@ -182,8 +200,6 @@ async function initContractObj (qkcWeb3) {
   console.log(GeneralNativeTokenManagers);
   buildContractObj(networkId, qkcWeb3, NonReservedNativeTokenManager, NonReservedNativeTokenManagerABI, NonReservedNativeTokenManagerAddr);
   console.log(NonReservedNativeTokenManager);
-  Status.InitSuccess = true;
-  return true;
 }
 
 export const GeneralNativeTokenManagers = new Array(8);

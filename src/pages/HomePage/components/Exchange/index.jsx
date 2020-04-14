@@ -6,7 +6,7 @@ import * as Contracts from '../../../../utils/contracts';
 import * as tool from '../../../../utils/global';
 
 const { Row, Col } = Grid;
-const asset = require('./images/asset.png');
+const asset = require('./images/asset1.png');
 const greenIcon = require('./images/green.png');
 const redIcon = require('./images/red.png');
 const yellowIcon = require('./images/yellow.png');
@@ -97,9 +97,12 @@ export default class Exchange extends Component {
   getData = () => {
     if (this.state.tokenName == '') return;
     Contracts.initContractObj(tool.qkcWeb3).then(result => {
+      if (!result) return;
       this.state.tokenId = tool.convertTokenName2Num(this.state.tokenName);
       tool.qkcWeb3.eth.getAccounts().then(accounts => {
-        console.log(accounts);
+        if (accounts == null || accounts.length == 0) {
+          accounts = [tool.InvalidAddr];
+        }
         Contracts.NonReservedNativeTokenManager.getNativeTokenInfo(this.state.tokenId).then(tokenInfo => {
           console.log(tokenInfo);
           tokenInfo.createTime = tokenInfo[0].toNumber();
@@ -123,21 +126,24 @@ export default class Exchange extends Component {
         for (let i = 0; i < Contracts.GeneralNativeTokenManagers.length; i++) {
           const GeneralNativeTokenManager = Contracts.GeneralNativeTokenManagers[i];
           GeneralNativeTokenManager.minGasReserveMaintain().then(minGasReserveMaintain => {
-            this.setState({minGasReserveMaintain: new BigNumber(minGasReserveMaintain.toHexString(), 16)});
+            this.setState({minGasReserveMaintain: new BigNumber(minGasReserveMaintain ? minGasReserveMaintain.toHexString() : '0x0', 16)});
           });
           
           GeneralNativeTokenManager.minGasReserveInit().then(minGasReserveInit => {
-            this.setState({minGasReserveInit: new BigNumber(minGasReserveInit.toHexString(), 16)});
+            this.setState({minGasReserveInit: new BigNumber(minGasReserveInit ? minGasReserveInit.toHexString() : '0x0', 16)});
           });
 
           GeneralNativeTokenManager.registrationRequired().then(required => {
             GeneralNativeTokenManager.registeredTokens(this.state.tokenId).then(registered => {
               this.state.allShardsInfo[i].needRegister = required && !registered;
+              this.setState({allShardsInfo: this.state.allShardsInfo});
               GeneralNativeTokenManager.gasReserves(this.state.tokenId).then(gasReserve => {
+                if (gasReserve == null) return;
                 this.state.allShardsInfo[i].admin = gasReserve.admin;
                 const exchangeRate = !gasReserve.exchangeRate.denominator.isZero() ? gasReserve.exchangeRate.numerator.toNumber() / gasReserve.exchangeRate.denominator.toNumber() : 0;
                 this.state.allShardsInfo[i].exchangeRate = exchangeRate;// != 0 ? exchangeRate.mul(100).toNumber() : 0;
                 this.state.allShardsInfo[i].refundRate = gasReserve.refundPercentage.toNumber();
+                this.setState({allShardsInfo: this.state.allShardsInfo});
                 GeneralNativeTokenManager.gasReserveBalance([this.state.tokenId, gasReserve.admin]).then(gasReserve => {
                   this.state.allShardsInfo[i].adminGasReserve = new BigNumber(gasReserve.toHexString(), 16).shiftedBy(-18).toNumber();
                   this.setState({allShardsInfo: this.state.allShardsInfo});
@@ -164,18 +170,10 @@ export default class Exchange extends Component {
         tool.displayErrorInfo('Fail to send transaction.');
         return;
       }
-
-      Notification.config({placement: 'br'});
-      Notification.open({
-          title: 'Success',
-          content:
-          <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
-          type: 'success',
-          duration: 0
-      });
+      tool.displayTxInfo(txId);
     }).catch(error => {
       if (error.code == 4001) return;
-      tool.displayErrorInfo(error);
+      tool.displayErrorInfo(error.message);
     });
   }
 
@@ -186,17 +184,10 @@ export default class Exchange extends Component {
         return;
       }
 
-      Notification.config({placement: 'br'});
-      Notification.open({
-          title: 'Success',
-          content:
-          <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
-          type: 'success',
-          duration: 0
-      });
+      tool.displayTxInfo(txId);
     }).catch(error => {
       if (error.code == 4001) return;
-      tool.displayErrorInfo(error);
+      tool.displayErrorInfo(error.message);
     });
   }
 
@@ -216,18 +207,11 @@ export default class Exchange extends Component {
         tool.displayErrorInfo('Fail to send transaction.');
       } else {
         this.setState({mintTokenVisible: false});
-        Notification.config({placement: 'br'});
-        Notification.open({
-            title: 'Result of Transaction',
-            content:
-            <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
-            type: 'success',
-            duration: 0
-        });
+        tool.displayTxInfo(txId);
       }
     }).catch(error => {
       if (error.code == 4001) return;
-      tool.displayErrorInfo(error);
+      tool.displayErrorInfo(error.message);
     });
   }
 
@@ -247,17 +231,10 @@ export default class Exchange extends Component {
         return;
       }
       this.setState({registerVisible: false});
-      Notification.config({placement: 'br'});
-      Notification.open({
-          title: 'Success',
-          content:
-          <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
-          type: 'success',
-          duration: 0
-      });
+      tool.displayTxInfo(txId);
     }).catch(error => {
       if (error.code == 4001) return;
-      tool.displayErrorInfo(error);
+      tool.displayErrorInfo(error.message);
     });
   }
 
@@ -317,17 +294,10 @@ export default class Exchange extends Component {
         return;
       }
       this.setState({exchangeRateVisible: false});
-      Notification.config({placement: 'br'});
-      Notification.open({
-          title: 'Success',
-          content:
-          <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
-          type: 'success',
-          duration: 0
-      });
+      tool.displayTxInfo(txId);
     }).catch(error => {
       if (error.code == 4001) return;
-      tool.displayErrorInfo(error);
+      tool.displayErrorInfo(error.message);
     });
 
   }
@@ -339,14 +309,10 @@ export default class Exchange extends Component {
         return;
       }
       this.setState({depositGasReserveVisible: false});
-      Notification.config({placement: 'br'});
-      Notification.open({
-          title: 'Success',
-          content:
-          <a href={'https://devnet.quarkchain.io/tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
-          type: 'success',
-          duration: 0
-      });
+      tool.displayTxInfo(txId);
+    }).catch(error => {
+      if (error.code == 4001) return;
+      tool.displayErrorInfo(error.message);
     });
   }
   
@@ -370,7 +336,10 @@ export default class Exchange extends Component {
               <li className={styles.auctionInfo}>
                 <div className={styles.desc}>Owner:</div>
               </li>
-                <div className={styles.value}>{tool.displayShortAddr(this.state.tokenInfo.owner)}</div>
+                <div className={styles.value}><a style={{color: '#000000'}} href={tool.QuarkChainNetwork + 'address/' 
+                                            + this.state.tokenInfo.owner + Contracts.NonReservedNativeTokenManager.fullShardKey} target='_blank'>
+                                                {tool.displayShortAddr(this.state.tokenInfo.owner)}
+                                            </a> </div>
             </li>
             <li className={styles.navItem} style={{width: this.state.tokenInfo.owner == this.state.tokenInfo.curAccount ? '500px' : '400px'}}>
               <li className={styles.navItem}>
@@ -403,7 +372,7 @@ export default class Exchange extends Component {
               <div className={styles.shardTitle}>Shard {i}</div>
               <img src={greenIcon} className={styles.iconItem}/>
               {
-                oneShard.needRegister ?  
+                oneShard.needRegister != false ?  
                   <Button text style={{ color: '#00C4FF', marginLeft: '40px'}} onClick={() => this.setState({registerVisible: true})}>                  
                   Register >>
                   </Button>
@@ -413,13 +382,15 @@ export default class Exchange extends Component {
             </Row>
             <Row style={{marginTop: '20px'}}>
               <Col span='14'>
-                  <div className={styles.value}>Liquidity Provider: {tool.displayShortAddr(oneShard.admin)}</div>
+                  <div className={styles.value}>Liquidity Provider: <a style={{color: '#000000'}} href={tool.QuarkChainNetwork + 'address/' 
+                                            + oneShard.admin + Contracts.NonReservedNativeTokenManager.fullShardKey} target='_blank'>
+                                                {tool.displayShortAddr(oneShard.admin)}</a></div>
               </Col>
               <Col span='10'>
                 <Row justify='start'>
                   <div style={{ width: '200px'}} className={styles.value}>{this.state.tokenName}/QKC: {oneShard.exchangeRate}</div>
                   {
-                    oneShard.needRegister ?                   
+                    oneShard.needRegister != false ?                   
                       ''
                         :
                       <Button text style={{ color: '#00C4FF'}} onClick={this.showExchangeRateDialog.bind(this, i)}>                  
@@ -446,7 +417,7 @@ export default class Exchange extends Component {
             <Row justify='start' style={{marginTop: '20px'}}>                
               <div  style={{ width: '300px'}} className={styles.nextValue}>User Gas Reserve: {oneShard.userGasReserve} QKC</div>
                 {
-                  oneShard.needRegister ?                   
+                  oneShard.needRegister != false ?                   
                     ''
                       :
                     <Button text style={{ color: '#00C4FF'}} onClick={() => this.setState({depositGasReserveVisible: true, curShardIndex: i})}>                  
@@ -454,18 +425,25 @@ export default class Exchange extends Component {
                     </Button>
                 }
                 {
-                  oneShard.needRegister ?                   
+                  oneShard.needRegister != false ?                   
                     ''
-                      :
+                    :
+                  (this.state.tokenInfo.curAccount == this.state.tokenInfo.owner ?            
+                    <Button text style={{ color: '#808080', marginLeft: '20px'}}>                  
+                    Withdraw >>
+                    </Button>
+                    :                    
                     <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={this.withdraw.bind(this, i)}>                  
                     Withdraw >>
                     </Button>
+                  )
+                    
                 }
             </Row>
             <Row justify='start' style={{marginTop: '20px'}}>                
                 <div  style={{ width: '300px'}} className={styles.nextValue}>User Native Token Balance: {oneShard.userNativeTokenBalance} {this.state.tokenName}</div>
                 {
-                  oneShard.needRegister ?                   
+                  oneShard.needRegister != false ?                   
                     ''
                       :
                     <Button text style={{ color: '#00C4FF'}} onClick={this.withdrawNativeToken.bind(this, i)}>                  
@@ -531,8 +509,9 @@ export default class Exchange extends Component {
                 innerBefore="Gas Reserve Amount:"
                 onChange={this.onChangeGasReserveAmount.bind(this)}
                 onPressEnter={this.changeExchangeRate.bind(this)}/>
-          <p style={{fontSize: 14, color: '#FB7C6E', lineHeight: '180%', marginRight: 30, marginLeft: 30}}>           
-          The amount of gas reserve should >= {this.state.minGasReserveInit.toString()} QKC
+          <p style={{fontSize: 14, color: '#FB7C6E', lineHeight: '180%', marginRight: 30, marginLeft: 30}}>     
+          You can either set a higher rate with minimum gas reserve of {this.state.minGasReserveInit.toString()} QKC,
+          or wait until the current liquidity provider's gas reserve drops below {this.state.minGasReserveMaintain.toString()} QKC and then can propose a new rate.
           </p>
         </Dialog>
 
