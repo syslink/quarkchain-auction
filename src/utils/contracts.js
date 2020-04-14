@@ -110,7 +110,7 @@ function buildContractObj(networkId, qkcWeb3, myContract, contractAbi, contractA
         myContract[funcName] = (parameterValues, {transferTokenId, transferAmount, fullShardKey}) => {
           if (myContract.fromAddr == tools.InvalidAddr) {
             return new Promise(function(resolve, reject) {
-              reject(new Error('Please check whether MetaMask has been installed and login.'));
+              reject(new Error('Please check whether MetaMask has been installed and login, or the website has been added to its connections.'));
             })
           }
           if (parameterValues == null) {
