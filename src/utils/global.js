@@ -5,8 +5,8 @@ import QuarkChain from 'quarkchain-web3-beta';
 import BigNumber from 'bignumber.js';
 import * as Contracts from './contracts';
 
-export const QuarkChainNetwork = 'https://devnet.quarkchain.io/';
-export const QuarkChainRPC = 'http://jrpc.devnet.quarkchain.io:38391';
+export const QuarkChainNetwork = QKC_EXPLORER;
+export const QuarkChainRPC = QKC_JRPC;
 export const InvalidAddr = '0x0000000000000000000000000000000000000000';
 export const MetamaskErrorInfo = 'Please check whether MetaMask has been installed and login, or whether the website has been added to the trusted connections of MetaMask.';
 
