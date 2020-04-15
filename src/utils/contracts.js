@@ -172,7 +172,10 @@ async function initContractObj (qkcWeb3) {
   if (Status.InitSuccess) return true;
   const networkInfo = await qkcRpc.getNetworkId();
   const networkId = networkInfo.networkId;
-  const accounts = await qkcWeb3.eth.getAccounts();
+  const accounts = await ethereum.enable();
+  ethereum.on('accountsChanged', function (accounts) {
+    window.location.reload();
+  });
   if (accounts == null || accounts.length == 0) {
     tools.displayErrorInfo(tools.MetamaskErrorInfo);
     generateContractInterface(qkcWeb3, networkId, tools.InvalidAddr);
