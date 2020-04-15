@@ -85,7 +85,7 @@ function buildContractObj(networkId, qkcWeb3, myContract, contractAbi, contractA
           const txParams = {
             from: myContract.fromAddr + fullShardKey,
             to: contractAddress,
-            gasPrice: '0x3b9aca00',
+            gasPrice: '0x0',
             gas: '0x2dc6c0',
             value: '0x0',
             data: payload,

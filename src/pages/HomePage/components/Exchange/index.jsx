@@ -25,16 +25,14 @@ export default class Exchange extends Component {
       mintTokenVisible: false,
       curBalance: 0,
       curShardIndex: 0,
-      minGasReserveMaintain: new BigNumber(0),
-      minGasReserveInit: new BigNumber(0),
-      allShardsInfo:  [{admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true},
-                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}, 
-                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true}],
+      allShardsInfo:  [{admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true, minGasReserveMaintain: new BigNumber(0), minGasReserveInit: new BigNumber(0)},
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true, minGasReserveMaintain: new BigNumber(0), minGasReserveInit: new BigNumber(0)}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true, minGasReserveMaintain: new BigNumber(0), minGasReserveInit: new BigNumber(0)}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true, minGasReserveMaintain: new BigNumber(0), minGasReserveInit: new BigNumber(0)}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true, minGasReserveMaintain: new BigNumber(0), minGasReserveInit: new BigNumber(0)}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true, minGasReserveMaintain: new BigNumber(0), minGasReserveInit: new BigNumber(0)}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true, minGasReserveMaintain: new BigNumber(0), minGasReserveInit: new BigNumber(0)}, 
+                       {admin: '', exchangeRate: 0, adminGasReserve: 0, userGasReserve: 0, userNativeTokenBalance: 0, refundRate: 0, needRegister: true, minGasReserveMaintain: new BigNumber(0), minGasReserveInit: new BigNumber(0)}],
       registerFooter: (<view style={{marginRight: '30px', marginBottom: '80px'}}>
         <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: '#00C4FF', 
           width: '120px', height: '50px', fontSize: '20px',
@@ -125,12 +123,16 @@ export default class Exchange extends Component {
 
         for (let i = 0; i < Contracts.GeneralNativeTokenManagers.length; i++) {
           const GeneralNativeTokenManager = Contracts.GeneralNativeTokenManagers[i];
-          GeneralNativeTokenManager.minGasReserveMaintain().then(minGasReserveMaintain => {
-            this.setState({minGasReserveMaintain: new BigNumber(minGasReserveMaintain ? minGasReserveMaintain.toHexString() : '0x0', 16)});
+          GeneralNativeTokenManager.minGasReserveMaintain().then(minGasReserveMaintainValue => {
+            minGasReserveMaintainValue = new BigNumber(minGasReserveMaintainValue != null ? minGasReserveMaintainValue.toHexString() : '0x0', 16);
+            this.state.allShardsInfo[i].minGasReserveMaintain = minGasReserveMaintainValue;
+              this.setState({allShardsInfo: this.state.allShardsInfo});
           });
           
-          GeneralNativeTokenManager.minGasReserveInit().then(minGasReserveInit => {
-            this.setState({minGasReserveInit: new BigNumber(minGasReserveInit ? minGasReserveInit.toHexString() : '0x0', 16)});
+          GeneralNativeTokenManager.minGasReserveInit().then(minGasReserveInitValue => {
+            minGasReserveInitValue = new BigNumber(minGasReserveInitValue != null ? minGasReserveInitValue.toHexString() : '0x0', 16);
+            this.state.allShardsInfo[i].minGasReserveInit = minGasReserveInitValue;
+              this.setState({allShardsInfo: this.state.allShardsInfo});
           });
 
           GeneralNativeTokenManager.registrationRequired().then(required => {
@@ -277,8 +279,8 @@ export default class Exchange extends Component {
       return;
     }
 
-    if (this.state.minGasReserveMaintain.isGreaterThan(new BigNumber(this.state.allShardsInfo[this.state.curShardIndex].adminGasReserve).shiftedBy(18))) {
-      if (this.state.minGasReserveInit.isGreaterThan(new BigNumber(this.state.gasReserveAmountValue + this.state.allShardsInfo[this.state.curShardIndex].userGasReserve).shiftedBy(18))) {
+    if (this.state.allShardsInfo[this.state.curShardIndex].minGasReserveMaintain.isGreaterThan(new BigNumber(this.state.allShardsInfo[this.state.curShardIndex].adminGasReserve).shiftedBy(18))) {
+      if (this.state.allShardsInfo[this.state.curShardIndex].minGasReserveInit.isGreaterThan(new BigNumber(this.state.gasReserveAmountValue + this.state.allShardsInfo[this.state.curShardIndex].userGasReserve).shiftedBy(18))) {
         tool.displayErrorInfo('Gas reserve amount cannot be less than ' + this.state.minGasReserveInit);
         return;
       }
@@ -429,9 +431,7 @@ export default class Exchange extends Component {
                     ''
                     :
                   (this.state.tokenInfo.curAccount == this.state.tokenInfo.owner ?            
-                    <Button text style={{ color: '#808080', marginLeft: '20px'}}>                  
-                    Withdraw >>
-                    </Button>
+                    ''
                     :                    
                     <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={this.withdraw.bind(this, i)}>                  
                     Withdraw >>
@@ -510,8 +510,8 @@ export default class Exchange extends Component {
                 onChange={this.onChangeGasReserveAmount.bind(this)}
                 onPressEnter={this.changeExchangeRate.bind(this)}/>
           <p style={{fontSize: 14, color: '#FB7C6E', lineHeight: '180%', marginRight: 30, marginLeft: 30}}>     
-          You can either set a higher rate with minimum gas reserve of {this.state.minGasReserveInit.toString()} QKC,
-          or wait until the current liquidity provider's gas reserve drops below {this.state.minGasReserveMaintain.toString()} QKC and then can propose a new rate.
+          You can either set a higher rate with minimum gas reserve of {this.state.allShardsInfo[this.state.curShardIndex].minGasReserveInit.shiftedBy(-18).toString()} QKC,
+          or wait until the current liquidity provider's gas reserve drops below {this.state.allShardsInfo[this.state.curShardIndex].minGasReserveMaintain.shiftedBy(-18).toString()} QKC and then can propose a new rate.
           </p>
         </Dialog>
 
