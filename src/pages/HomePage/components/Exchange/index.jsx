@@ -279,13 +279,17 @@ export default class Exchange extends Component {
       return;
     }
 
-    if (this.state.allShardsInfo[this.state.curShardIndex].minGasReserveMaintain.isGreaterThan(new BigNumber(this.state.allShardsInfo[this.state.curShardIndex].adminGasReserve).shiftedBy(18))) {
-      if (this.state.allShardsInfo[this.state.curShardIndex].minGasReserveInit.isGreaterThan(new BigNumber(this.state.gasReserveAmountValue + this.state.allShardsInfo[this.state.curShardIndex].userGasReserve).shiftedBy(18))) {
-        tool.displayErrorInfo('Gas reserve amount cannot be less than ' + this.state.minGasReserveInit);
-        return;
-      }
-    } else if (this.state.allShardsInfo[this.state.curShardIndex].exchangeRate >= this.state.exchangeRateValue) {
-      tool.displayErrorInfo('Exchange rate must be bigger than the current value.');
+    // 只有当admin剩余的gas reserve少于maintain，才需要考虑rate是否增加
+    const adminGasReserve = new BigNumber(this.state.allShardsInfo[this.state.curShardIndex].adminGasReserve).shiftedBy(18);
+    if (adminGasReserve.isGreaterThanOrEqualTo(this.state.allShardsInfo[this.state.curShardIndex].minGasReserveMaintain)
+      && this.state.allShardsInfo[this.state.curShardIndex].exchangeRate >= this.state.exchangeRateValue) {
+      tool.displayErrorInfo('Exchange rate must be bigger than ' + this.state.allShardsInfo[this.state.curShardIndex].exchangeRate);
+      return;
+    }
+    // 无论哪种情况，init限制都需要考虑
+    const initGasReserve = new BigNumber(this.state.gasReserveAmountValue).plus(new BigNumber(this.state.allShardsInfo[this.state.curShardIndex].userGasReserve)).shiftedBy(18);
+    if (this.state.allShardsInfo[this.state.curShardIndex].minGasReserveInit.isGreaterThan(initGasReserve)) {
+      tool.displayErrorInfo('Init gas reserve amount cannot be less than ' + this.state.allShardsInfo[this.state.curShardIndex].minGasReserveInit.shiftedBy(-18).toNumber() + ' QKC');
       return;
     }
 
@@ -375,7 +379,7 @@ export default class Exchange extends Component {
               <img src={greenIcon} className={styles.iconItem}/>
               {
                 oneShard.needRegister != false ?  
-                  <Button text style={{ color: '#00C4FF', marginLeft: '40px'}} onClick={() => this.setState({registerVisible: true})}>                  
+                  <Button text style={{ color: '#00C4FF', marginLeft: '40px'}} onClick={() => this.setState({registerVisible: true, curShardIndex: i})}>                  
                   Register >>
                   </Button>
                   :

@@ -67,7 +67,24 @@ export default class Header extends Component {
       });
       return;
     }
-    history.push('/Exchange?' + this.state.tokenName);
+    const tokenId = tool.convertTokenName2Num(this.state.tokenName);
+    Contracts.NonReservedNativeTokenManager.getNativeTokenInfo(tokenId).then(tokenInfo => {
+      console.log(tokenInfo);
+      tokenInfo.createTime = tokenInfo[0].toNumber();
+      tokenInfo.owner = tokenInfo[1];
+      tokenInfo.totalSupply = tokenInfo[2];
+      if (tokenInfo.createTime == 0) {
+        Notification.config({placement: 'br'});
+        Notification.open({
+          title: 'Warning',
+          content: 'There is no token with this name.',
+          type: 'warning',
+          duration: 0
+        });
+      } else {
+        history.push('/Exchange?' + this.state.tokenName);
+      }
+    });
   }
 
   showTokenAuction = () => {
