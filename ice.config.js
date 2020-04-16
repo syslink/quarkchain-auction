@@ -1,4 +1,6 @@
 const path = require('path');
+const WebpackPluginDefine = require("webpack").DefinePlugin;
+
 
 module.exports = {
   entry: 'src/index.jsx',
@@ -20,4 +22,16 @@ module.exports = {
   alias: {
     '@': path.resolve(__dirname, './src/'),
   },
+  chainWebpack: (config) => {
+    config
+      // 定义插件名称
+      .plugin('WebpackPluginDefine')
+      // 第一项为具体插件，第二项为插件参数
+      .use(WebpackPluginDefine, [
+        {
+          QKC_JRPC: JSON.stringify(process.env.QKC_JRPC) || "'http://jrpc.devnet.quarkchain.io:38391'",
+          QKC_EXPLORER: JSON.stringify(process.env.QKC_EXPLORER) || "'https://devnet.quarkchain.io/'",
+        },
+      ]);
+  }
 };
