@@ -66,11 +66,10 @@ export default class Banner extends Component {
     auctionState.endTime = auctionState[4].toNumber();
 
     let start = true;
-    let paused = false;
+    let paused = await Contracts.NonReservedNativeTokenManager.isPaused();  // pause的时候，既不能endAuction，也不能bid
     let curRound = auctionState.round;
     if (auctionState.endTime > 946656000) {  // 946656000=2000/1/1, 小于此值说明处于第0轮,或者是调用了endAuction，round不需要变更
       this.state.bEnd = this.isOutOfTime(auctionState.endTime);             // 当前一轮已经结束，并且为pause的时候，应该start new round
-      paused = await Contracts.NonReservedNativeTokenManager.isPaused();    // pause的时候，既不能endAuction，也不能bid
     } else {
       start = false;
     }
