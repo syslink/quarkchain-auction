@@ -84,19 +84,60 @@ export function displayErrorInfo(error) {
     title: 'Error',
     content: error,
     type: 'error',
-    duration: 0
+    duration: 10000
   });
 }
 
+export function checkTxResult(successCallback) {
+
+}
 
 export function displayTxInfo(txId) {
   const content = <a href={QuarkChainNetwork + 'tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>;
   Notification.config({placement: 'br'});
-  Notification.open({
+  const key = Notification.open({
       title: 'Result of Transaction',
       content,
       type: 'success',
-      duration: 0
+      duration: 0,
+      onClick: () => { Notification.close(key); },
+  });
+}
+
+export function displayReceiptSuccessInfo(txId) {
+  const content = 'Transaction which id is ' + displayShortAddr(txId) + ' has been executed successfully, please click here to get the latest result.';
+  Notification.config({placement: 'br'});
+  const key = Notification.open({
+      title: 'Receipt of Transaction',
+      content,
+      type: 'success',
+      duration: 0,
+      onClick: () => { Notification.close(key); window.location.reload(); },
+  });
+}
+
+export function displayReceiptFailInfo(txId) {
+  const content = <a href={QuarkChainNetwork + 'tx/' + txId} target='_blank'>
+                    Transaction which id is ' + {displayShortAddr(txId)} + ' has been failed to execute, please click here to check the result.'
+                  </a>;
+  Notification.config({placement: 'br'});
+  const key = Notification.open({
+      title: 'Receipt of Transaction',
+      content,
+      type: 'success',
+      duration: 0,
+      onClick: () => { Notification.close(key); },
+  });
+}
+
+
+export function displayWarningInfo(warning) {
+  Notification.config({placement: 'br'});
+  Notification.open({
+    title: 'Warning',
+    content: warning,
+    type: 'warning',
+    duration: 10000
   });
 }
 

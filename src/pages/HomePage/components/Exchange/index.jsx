@@ -107,13 +107,7 @@ export default class Exchange extends Component {
           tokenInfo.owner = tokenInfo[1];
           tokenInfo.totalSupply = tokenInfo[2];
           if (tokenInfo.createTime == 0) {
-            Notification.config({placement: 'br'});
-            Notification.open({
-              title: 'Warning',
-              content: 'There is no token with this name.',
-              type: 'warning',
-              duration: 0
-            });
+            tool.displayWarningInfo('There is no token with this name.');
           } else {
             tokenInfo.tokenName = this.state.tokenName;
             tokenInfo.curAccount = accounts[0];

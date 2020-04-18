@@ -68,9 +68,9 @@ export default class Banner extends Component {
     let start = true;
     let paused = await Contracts.NonReservedNativeTokenManager.isPaused();  // pause的时候，既不能endAuction，也不能bid
     let curRound = auctionState.round;
-    if (auctionState.endTime > 946656000) {  // 946656000=2000/1/1, 小于此值说明处于第0轮,或者是调用了endAuction，round不需要变更
+    if (auctionState.endTime > 946656000) {  // 946656000=2000/1/1, 小于此值说明处于第0轮,或者是调用了endAuction
       this.state.bEnd = this.isOutOfTime(auctionState.endTime);             // 当前一轮已经结束，并且为pause的时候，应该start new round
-    } else {
+    } else {        // 第0轮或者被endAuction时，endTime=0
       start = false;
     }
 
@@ -113,13 +113,7 @@ export default class Banner extends Component {
       tokenInfo.totalSupply = tokenInfo[2];
       this.setState({checkImgVisible: tokenInfo.createTime == 0});
       if (tokenInfo.createTime > 0) {
-        Notification.config({placement: 'br'});
-        Notification.open({
-          title: 'Warning',
-          content: 'Token name has been auctioned and can not be auctioned again.',
-          type: 'warning',
-          duration: 0
-        });
+        tool.displayWarningInfo('Token name has been auctioned and can not be auctioned again.');
       }
     });
   }

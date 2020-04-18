@@ -1,6 +1,5 @@
 import * as abiUtil from 'ethereumjs-abi';
 import {AbiCoder as EthersAbiCoder} from 'ethers/utils/abi-coder';
-import { Notification } from '@alifd/next';
 import BigNumber from 'bignumber.js';
 import * as qkcRpc from './quarkchainRPC';
 import * as tools from './global';
@@ -9,14 +8,14 @@ const GeneralNativeTokenManagerABI = [{"inputs":[{"internalType":"address","name
 
 const NonReservedNativeTokenManagerABI = [{"inputs":[{"internalType":"address","name":"_supervisor","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"winner","type":"address"},{"indexed":false,"internalType":"uint128","name":"newTokenId","type":"uint128"}],"name":"AuctionEnded","type":"event"},{"constant":true,"inputs":[],"name":"auctionParams","outputs":[{"internalType":"uint128","name":"duration","type":"uint128"},{"internalType":"uint64","name":"minIncrementInPercent","type":"uint64"},{"internalType":"uint64","name":"minPriceInQKC","type":"uint64"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balances","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"uint128","name":"tokenId","type":"uint128"},{"internalType":"uint128","name":"price","type":"uint128"},{"internalType":"uint64","name":"round","type":"uint64"}],"name":"bidNewToken","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"endAuction","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getAuctionState","outputs":[{"internalType":"uint128","name":"","type":"uint128"},{"internalType":"uint128","name":"","type":"uint128"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint64","name":"","type":"uint64"},{"internalType":"uint128","name":"","type":"uint128"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"uint128","name":"tokenId","type":"uint128"}],"name":"getNativeTokenInfo","outputs":[{"internalType":"uint64","name":"","type":"uint64"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"isPaused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"uint128","name":"tokenId","type":"uint128"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"mintNewToken","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"uint128","name":"","type":"uint128"}],"name":"nativeTokens","outputs":[{"internalType":"uint64","name":"createAt","type":"uint64"},{"internalType":"address","name":"owner","type":"address"},{"internalType":"uint256","name":"totalSupply","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"pauseAuction","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"resumeAuction","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint64","name":"_minPriceInQKC","type":"uint64"},{"internalType":"uint64","name":"_minIncrementInPercent","type":"uint64"},{"internalType":"uint64","name":"_duration","type":"uint64"}],"name":"setAuctionParams","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"supervisor","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"uint128","name":"tokenId","type":"uint128"},{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newSupervisor","type":"address"}],"name":"updateSupervisor","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint128","name":"tokenId","type":"uint128"},{"internalType":"bool","name":"whitelisted","type":"bool"}],"name":"whitelistTokenId","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"uint128","name":"","type":"uint128"}],"name":"whitelistedTokenId","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"withdraw","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
 
-const GeneralNativeTokenManagerAddrs = ['0x6C548FF86953CF08FC03C801833bBAb17136ff4A00000000',
-                                        '0x14bB36d8DEf89ef0AD93b102110eA3A941bA7f970001524a',
-                                        '0x706C609Aa89187939e45907Fe22Baf32EB9133340002524A',
-                                        '0xD8c24E95A6872CE7Eb22B5A1b45a8328143a4e080003524a',
-                                        '0x09d185ccA81Af057F38dF31991D9A3e47F7086d00004524a',
-                                        '0x2556094C08b142419F0507D54B8F1280652175E20005524a',
-                                        '0xE8caC7d795e717643626cc2f01cC873155126E450006524a',
-                                        '0x9AE5cFACA7Ec65424186a10dbB96EE34Ff832F530007524A'];
+const GeneralNativeTokenManagerAddrs = ['0x514B43000000000000000000000000000000000300000000',
+                                        '0x514B43000000000000000000000000000000000300010000',
+                                        '0x514B43000000000000000000000000000000000300020000',
+                                        '0x514B43000000000000000000000000000000000300030000',
+                                        '0x514B43000000000000000000000000000000000300040000',
+                                        '0x514B43000000000000000000000000000000000300050000',
+                                        '0x514B43000000000000000000000000000000000300060000',
+                                        '0x514B43000000000000000000000000000000000300070000'];
 const NonReservedNativeTokenManagerAddr = '0x514b43000000000000000000000000000000000200000000';
 
 function getContractPayload (funcName, parameterTypes, parameterValues) {
@@ -147,6 +146,22 @@ function buildContractObj(networkId, qkcWeb3, myContract, contractAbi, contractA
             networkId,
           };
           return qkcWeb3.qkc.sendTransaction(txParams).then((transactionId) => {
+            const intervalId = setInterval(() => {
+              qkcRpc.getTransactionReceipt(transactionId).then(receipt => {
+                if (receipt != null) {
+                  clearInterval(intervalId);
+                  if (receipt.status == 1) {
+                    tools.displayReceiptSuccessInfo(transactionId);
+                  } else {
+                    tools.displayReceiptFailInfo(transactionId);
+                  }
+                }
+              });
+            }, 2000);
+
+            setTimeout(() => {
+              
+            }, 3000);
             return transactionId;           
           }).catch(error => {
             throw error;

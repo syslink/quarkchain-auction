@@ -58,13 +58,7 @@ export default class Header extends Component {
   onSearch() {
     const valid = /[0-9A-Z]{5,12}$/.test(this.state.tokenName);
     if (!valid) {
-      Notification.config({placement: 'br'});
-      Notification.open({
-        title: 'Error',
-        content: 'Token name only can be a mix of capital letters and numbers with length between 5 and 12.',
-        type: 'error',
-        duration: 0
-      });
+      tool.displayErrorInfo('Token name only can be a mix of capital letters and numbers with length between 5 and 12.');
       return;
     }
     const tokenId = tool.convertTokenName2Num(this.state.tokenName);
@@ -74,13 +68,7 @@ export default class Header extends Component {
       tokenInfo.owner = tokenInfo[1];
       tokenInfo.totalSupply = tokenInfo[2];
       if (tokenInfo.createTime == 0) {
-        Notification.config({placement: 'br'});
-        Notification.open({
-          title: 'Warning',
-          content: 'There is no token with this name.',
-          type: 'warning',
-          duration: 0
-        });
+        tool.displayWarningInfo('There is no token with this name.');
       } else {
         history.push('/Exchange?' + this.state.tokenName);
       }
@@ -113,14 +101,7 @@ export default class Header extends Component {
       if (new BigNumber(txId, 16).toNumber() == 0) {
         tool.displayErrorInfo('Fail to send transaction.');
       } else {
-        Notification.config({placement: 'br'});
-        Notification.open({
-            title: 'Result of Transaction',
-            content:
-            <a href={tool.QuarkChainNetwork + 'tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>,
-            type: 'success',
-            duration: 0
-        });
+        tool.displayTxInfo(txId);
       }
     }).catch(error => {
       if (error.code == 4001) return;
