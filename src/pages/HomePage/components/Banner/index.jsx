@@ -139,11 +139,17 @@ export default class Banner extends Component {
   }
   
   bidNow = () => {
-    const valid = /[0-9A-Z]{5,12}$/.test(this.state.tokenName);
+    let valid = /[0-9A-Z]{5,12}$/.test(this.state.tokenName);
     if (!valid) {
       tool.displayErrorInfo('Token name only can be a mix of capital letters and numbers with length between 5 and 12.');
       return;
     }
+    valid = /^[0-9]*$/.test(this.state.bidPrice);
+    if (!valid) {
+      tool.displayErrorInfo('Token name only can be a numbers.');
+      return;
+    }
+
     this.state.highestBidderIsMe = this.state.auctionStateInfo.addrOfHighestBid == this.state.curAccount;
    
     Contracts.NonReservedNativeTokenManager.balances(this.state.curAccount).then(balance => {

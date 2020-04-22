@@ -126,6 +126,9 @@ export function displayReceiptSuccessInfo(txId) {
 }
 
 export function displayReceiptFailInfo(txId) {
+  if (txNotificationKeyMap[txId] != null) {
+    Notification.close(txNotificationKeyMap[txId]); 
+  }
   const content = <a href={QuarkChainNetwork + 'tx/' + txId} target='_blank'>
                     Transaction which id is ' + {displayShortAddr(txId)} + ' has been failed to execute, please click here to check the result.'
                   </a>;

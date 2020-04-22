@@ -139,14 +139,19 @@ export default class Header extends Component {
         <ul className={styles.nav}>
           <li className={styles.accountItem}>
             <img src={ACCOUNT} className={styles.accountImg}/>
-            <Balloon trigger={accountInfoBtn} closable={false} onVisibleChange={this.handleVisibleChange.bind(this)}>
+            <Balloon trigger={accountInfoBtn} closable={false} onVisibleChange={() => this.handleVisibleChange.bind(this)}>
               <li className={styles.ballonItem}>
                 <p>Balance in Contract</p>
                 <p>{tool.convert2BaseUnit(this.state.balance)} QKC</p>
                 <br/>
-                <Button text className={styles.activeNavItemLink} onClick={this.withdrawAll}>
-                  Withdraw All
-                </Button>
+                {
+                  this.state.balance > 0 ?                  
+                    <Button text className={styles.activeNavItemLink} onClick={this.withdrawAll}>
+                      Withdraw All
+                    </Button>
+                    :
+                    ''
+                }
               </li>
             </Balloon>
           </li>

@@ -221,7 +221,7 @@ export default class Exchange extends Component {
 
   sendRegisterTx = () => {    
     Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].registerToken([], 
-      {transferTokenId: this.state.tokenId, transferAmount: new BigNumber(this.state.tokenAmount)}, this.getData).then(txId => {
+      {transferTokenId: this.state.tokenId, transferAmount: new BigNumber(this.state.tokenAmount), fullShardKey: '00000000'}, this.getData).then(txId => {
       if (new BigNumber(txId, 16).toNumber() == 0) {
         tool.displayErrorInfo('Fail to send transaction.');
         return;
@@ -421,15 +421,19 @@ export default class Exchange extends Component {
                   oneShard.needRegister != false ?                   
                     ''
                       :
-                    <Button text style={{ color: '#00C4FF'}} onClick={() => this.setState({depositGasReserveVisible: true, curShardIndex: i})}>                  
-                    Deposit >>
-                    </Button>
+                    (this.state.tokenInfo.curAccount == oneShard.admin ?    
+                      <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={() => this.setState({depositGasReserveVisible: true, curShardIndex: i})}>                  
+                      Deposit >>
+                      </Button>
+                      :
+                      ''
+                    )
                 }
                 {
                   oneShard.needRegister != false ?                   
                     ''
                     :
-                  (this.state.tokenInfo.curAccount == this.state.tokenInfo.owner ?            
+                  ((this.state.tokenInfo.curAccount == oneShard.admin || oneShard.userGasReserve == 0) ?            
                     ''
                     :                    
                     <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={this.withdraw.bind(this, i)}>                  
@@ -442,10 +446,10 @@ export default class Exchange extends Component {
             <Row justify='start' style={{marginTop: '20px'}}>                
                 <div  style={{ width: '300px'}} className={styles.nextValue}>User Native Token Balance: {oneShard.userNativeTokenBalance} {this.state.tokenName}</div>
                 {
-                  oneShard.needRegister != false ?                   
+                  (oneShard.needRegister != false || oneShard.userNativeTokenBalance == 0) ?                   
                     ''
                       :
-                    <Button text style={{ color: '#00C4FF'}} onClick={this.withdrawNativeToken.bind(this, i)}>                  
+                    <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={this.withdrawNativeToken.bind(this, i)}>                  
                     Withdraw >>
                     </Button>
                 }

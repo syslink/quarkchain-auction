@@ -136,7 +136,7 @@ function buildContractObj(networkId, qkcWeb3, myContract, contractAbi, contractA
             from: myContract.fromAddr + fullShardKey,
             to: contractAddress,
             fromFullShardKey: '0x' + fullShardKey,
-            toFullShardKey: '0x' + fullShardKey,
+            toFullShardKey: '0x' + myContract.fullShardKey,
             gasPrice: '0x3b9aca00',
             gas: '0x2dc6c0',
             value,
