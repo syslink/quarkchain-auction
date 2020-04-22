@@ -123,7 +123,7 @@ export default class Banner extends Component {
     });
   }
   endAuction = () => {
-    Contracts.NonReservedNativeTokenManager.endAuction(null, {}).then(txId => {
+    Contracts.NonReservedNativeTokenManager.endAuction(null, {}, this.syncStatus).then(txId => {
       console.log(txId);
       this.setState({confimationVisible: false});
       if (new BigNumber(txId, 16).toNumber() == 0) {
