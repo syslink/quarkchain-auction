@@ -51,6 +51,11 @@ export default class Banner extends Component {
   componentDidMount = async () => {
     const result = await Contracts.initContractObj(tool.qkcWeb3);
     if (!result) return;
+
+    await this.syncStatus();
+  }
+
+  syncStatus = async () => {
     const auctionParams = await Contracts.NonReservedNativeTokenManager.auctionParams();
     console.log(auctionParams);
     auctionParams.duration = auctionParams[0].toNumber();
@@ -75,7 +80,7 @@ export default class Banner extends Component {
     }
 
     this.setState({auctionStateInfo: auctionState, start, paused, curRound, auctionParams, bEnd: this.state.bEnd});
-
+    
     qkcWeb3.eth.getAccounts().then(accounts => {
       if (accounts == null || accounts.length == 0) {
         return;
@@ -163,7 +168,7 @@ export default class Banner extends Component {
     const tokenId = convertTokenName2Num(this.state.tokenName);
     const bidPrice = '0x' + new BigNumber(this.state.bidPrice).shiftedBy(18).toString(16);
     Contracts.NonReservedNativeTokenManager.bidNewToken([tokenId, bidPrice, this.state.curRound],
-      {transferAmount: new BigNumber(this.state.remainBalance)}).then(txId => {
+      {transferAmount: new BigNumber(this.state.remainBalance)}, this.syncStatus).then(txId => {
         console.log(txId);
         this.setState({confimationVisible: false});
         if (new BigNumber(txId, 16).toNumber() == 0) {

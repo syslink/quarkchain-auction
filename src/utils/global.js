@@ -92,6 +92,8 @@ export function checkTxResult(successCallback) {
 
 }
 
+const txNotificationKeyMap = {};
+
 export function displayTxInfo(txId) {
   const content = <a href={QuarkChainNetwork + 'tx/' + txId} target='_blank'>Transaction has been sent successfully, please click here to check it.</a>;
   Notification.config({placement: 'br'});
@@ -100,19 +102,26 @@ export function displayTxInfo(txId) {
       content,
       type: 'success',
       duration: 0,
-      onClick: () => { Notification.close(key); },
+      onClick: () => { 
+        Notification.close(key); 
+        txNotificationKeyMap[txId] = null;
+      },
   });
+  txNotificationKeyMap[txId] = key;
 }
 
 export function displayReceiptSuccessInfo(txId) {
-  const content = 'Transaction which id is ' + displayShortAddr(txId) + ' has been executed successfully, please click here to get the latest result.';
-  Notification.config({placement: 'br'});
+  if (txNotificationKeyMap[txId] != null) {
+    Notification.close(txNotificationKeyMap[txId]); 
+  }
+  const content = 'Transaction which id is ' + displayShortAddr(txId) + ' has been executed successfully.';
+  Notification.config({placement: 'br'});  
   const key = Notification.open({
       title: 'Receipt of Transaction',
       content,
       type: 'success',
-      duration: 0,
-      onClick: () => { Notification.close(key); window.location.reload(); },
+      duration: 10000,
+      onClick: () => { Notification.close(key); },
   });
 }
 

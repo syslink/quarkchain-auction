@@ -106,7 +106,7 @@ function buildContractObj(networkId, qkcWeb3, myContract, contractAbi, contractA
         }
         
       } else {
-        myContract[funcName] = (parameterValues, {transferTokenId, transferAmount, fullShardKey}) => {
+        myContract[funcName] = (parameterValues, {transferTokenId, transferAmount, fullShardKey}, successCallback) => {
           if (myContract.fromAddr == tools.InvalidAddr) {
             return new Promise(function(resolve, reject) {
               reject(new Error(tools.MetamaskErrorInfo));
@@ -152,16 +152,15 @@ function buildContractObj(networkId, qkcWeb3, myContract, contractAbi, contractA
                   clearInterval(intervalId);
                   if (receipt.status == 1) {
                     tools.displayReceiptSuccessInfo(transactionId);
+                    if (successCallback != null) {
+                      successCallback();
+                    }
                   } else {
                     tools.displayReceiptFailInfo(transactionId);
                   }
                 }
               });
             }, 2000);
-
-            setTimeout(() => {
-              
-            }, 3000);
             return transactionId;           
           }).catch(error => {
             throw error;

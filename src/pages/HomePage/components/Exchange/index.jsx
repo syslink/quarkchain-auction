@@ -161,7 +161,7 @@ export default class Exchange extends Component {
   }
 
   withdraw = (shardIndex) => {
-    Contracts.GeneralNativeTokenManagers[shardIndex].withdrawGasReserve(this.state.tokenId, {}).then(txId => {
+    Contracts.GeneralNativeTokenManagers[shardIndex].withdrawGasReserve(this.state.tokenId, {}, this.getData).then(txId => {
       if (new BigNumber(txId, 16).toNumber() == 0) {
         tool.displayErrorInfo('Fail to send transaction.');
         return;
@@ -174,7 +174,7 @@ export default class Exchange extends Component {
   }
 
   withdrawNativeToken = (shardIndex) => {
-    Contracts.GeneralNativeTokenManagers[shardIndex].withdrawNativeToken(this.state.tokenId, {}).then(txId => {
+    Contracts.GeneralNativeTokenManagers[shardIndex].withdrawNativeToken(this.state.tokenId, {}, this.getData).then(txId => {
       if (new BigNumber(txId, 16).toNumber() == 0) {
         tool.displayErrorInfo('Fail to send transaction.');
         return;
@@ -198,7 +198,7 @@ export default class Exchange extends Component {
       return;
     }
     const amount = '0x' + new BigNumber(this.state.mintedTokenAmount).shiftedBy(18).toString(16);
-    Contracts.NonReservedNativeTokenManager.mintNewToken([this.state.tokenId, amount], {}).then(txId => {
+    Contracts.NonReservedNativeTokenManager.mintNewToken([this.state.tokenId, amount], {}, this.getData).then(txId => {
       if (new BigNumber(txId, 16).toNumber() == 0) {
         tool.displayErrorInfo('Fail to send transaction.');
       } else {
@@ -221,7 +221,7 @@ export default class Exchange extends Component {
 
   sendRegisterTx = () => {    
     Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].registerToken([], 
-      {transferTokenId: this.state.tokenId, transferAmount: new BigNumber(this.state.tokenAmount)}).then(txId => {
+      {transferTokenId: this.state.tokenId, transferAmount: new BigNumber(this.state.tokenAmount)}, this.getData).then(txId => {
       if (new BigNumber(txId, 16).toNumber() == 0) {
         tool.displayErrorInfo('Fail to send transaction.');
         return;
@@ -288,7 +288,7 @@ export default class Exchange extends Component {
     }
 
     Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].proposeNewExchangeRate([this.state.tokenId, numerator, denominator], 
-      {transferAmount: new BigNumber(this.state.gasReserveAmountValue)}).then(txId => {
+      {transferAmount: new BigNumber(this.state.gasReserveAmountValue)}, this.getData).then(txId => {
       if (new BigNumber(txId, 16).toNumber() == 0) {
         tool.displayErrorInfo('Fail to send transaction.');
         return;
@@ -303,7 +303,8 @@ export default class Exchange extends Component {
   }
 
   depositGasReserve = () => {
-    Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].depositGasReserve(this.state.tokenId, {transferAmount: new BigNumber(this.state.tokenAmount)}).then(txId => {
+    Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].depositGasReserve(this.state.tokenId, 
+      {transferAmount: new BigNumber(this.state.tokenAmount)}, this.getData).then(txId => {
       if (new BigNumber(txId, 16).toNumber() == 0) {
         tool.displayErrorInfo('Fail to send transaction.');
         return;
