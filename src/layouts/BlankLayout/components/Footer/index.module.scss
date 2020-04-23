@@ -1,9 +1,11 @@
 .container {
-  padding: 50px 0;
-  padding-left: 0px;
+  display: flex;
+  justify-content: space-between;
+  width: 85%;
+  margin: 150px auto 0 auto;
+  padding: 20px 0;
   color: #fff;
   background: rgb(27, 20, 136);
-  margin-top: 150px;
 }
 
 .content {

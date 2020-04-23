@@ -1,5 +1,11 @@
 @import '@alifd/next/reset.scss';
 
+html,
+body {
+  width: 1500px;
+  margin: 0 auto;
+}
+
 .next-table-header-node .next-table-cell-wrapper {
   background: #ffffff;
   color: rgb(34, 36, 186);
