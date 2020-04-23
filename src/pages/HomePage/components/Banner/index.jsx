@@ -146,7 +146,7 @@ export default class Banner extends Component {
     }
     valid = /^[0-9]*$/.test(this.state.bidPrice);
     if (!valid) {
-      tool.displayErrorInfo('Token name only can be a numbers.');
+      tool.displayErrorInfo('Bid price only can be a number.');
       return;
     }
 

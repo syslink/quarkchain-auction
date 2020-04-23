@@ -303,6 +303,12 @@ export default class Exchange extends Component {
   }
 
   depositGasReserve = () => {
+    const valid = /^[0-9]*$/.test(this.state.tokenAmount);
+    if (!valid) {
+      tool.displayErrorInfo('Token amount only can be a number.');
+      return;
+    }
+
     Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].depositGasReserve(this.state.tokenId, 
       {transferAmount: new BigNumber(this.state.tokenAmount)}, this.getData).then(txId => {
       if (new BigNumber(txId, 16).toNumber() == 0) {
