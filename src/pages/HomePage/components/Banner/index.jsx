@@ -144,7 +144,7 @@ export default class Banner extends Component {
       tool.displayErrorInfo('Token name only can be a mix of capital letters and numbers with length between 5 and 12.');
       return;
     }
-    valid = /^[0-9]*$/.test(this.state.bidPrice);
+    valid = /^[0-9.]*$/.test(this.state.bidPrice);
     if (!valid) {
       tool.displayErrorInfo('Bid price only can be a number.');
       return;
@@ -244,7 +244,7 @@ export default class Banner extends Component {
           
           <li className={styles.bidInfo}>
             <Input disabled={this.state.paused || this.state.bEnd} style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', width: '250px', height: '25px'}} 
-                   placeholder="Token Name" onChange={this.changeTokenName.bind(this)}/>
+                   placeholder="Token Name" onChange={this.changeTokenName.bind(this)} title={this.state.bEnd ? 'please end the current auction to start a new round' : ''}/>
             {
               this.state.checkImgVisible ? 
                 <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: 'transparent', 

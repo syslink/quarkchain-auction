@@ -4,6 +4,7 @@ import BigNumber from 'bignumber.js';
 import styles from './index.module.scss';
 import * as Contracts from '../../../../utils/contracts';
 import * as tool from '../../../../utils/global';
+import * as qkcRpc from '../../../../utils/quarkchainRPC';
 
 const { Row, Col } = Grid;
 const asset = require('./images/asset1.png');
@@ -286,20 +287,38 @@ export default class Exchange extends Component {
       tool.displayErrorInfo('Init gas reserve amount cannot be less than ' + this.state.allShardsInfo[this.state.curShardIndex].minGasReserveInit.shiftedBy(-18).toNumber() + ' QKC');
       return;
     }
-
-    Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].proposeNewExchangeRate([this.state.tokenId, numerator, denominator], 
-      {transferAmount: new BigNumber(this.state.gasReserveAmountValue)}, this.getData).then(txId => {
-      if (new BigNumber(txId, 16).toNumber() == 0) {
-        tool.displayErrorInfo('Fail to send transaction.');
-        return;
+    const setRateFunc = (transferAmount, fullShardKey) => {
+      Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].proposeNewExchangeRate([this.state.tokenId, numerator, denominator], 
+        {transferAmount, fullShardKey}, this.getData).then(txId => {
+        if (new BigNumber(txId, 16).toNumber() == 0) {
+          tool.displayErrorInfo('Fail to send transaction.');
+          return;
+        }
+        this.setState({exchangeRateVisible: false});
+        tool.displayTxInfo(txId);
+      }).catch(error => {
+        if (error.code == 4001) return;
+        tool.displayErrorInfo(error.message);
+      });
+    }
+    const transferAmount = new BigNumber(this.state.gasReserveAmountValue);
+    qkcRpc.getAccountData(this.state.tokenInfo.curAccount + '000' + this.state.curShardIndex + '0001', 'latest', true).then(accountData => {
+      const shards = [accountData.primary];
+      shards.push(...accountData.shards);
+      for (var oneShard of shards) {
+        for (var balanceInfo of oneShard.balances) {
+          if (balanceInfo.tokenStr == 'QKC') {
+            if (new BigNumber(balanceInfo.balance, 16).shiftedBy(-18).isGreaterThan(transferAmount)) {
+              const preZeroNum = 8 - (oneShard.fullShardId.length - 2);
+              const fullShardKey = '0'.repeat(preZeroNum) + oneShard.fullShardId.substr(2);
+              setRateFunc(transferAmount, fullShardKey);
+              return;
+            }
+          }
+        }
       }
-      this.setState({exchangeRateVisible: false});
-      tool.displayTxInfo(txId);
-    }).catch(error => {
-      if (error.code == 4001) return;
-      tool.displayErrorInfo(error.message);
+      tool.displayWarningInfo('You have no enough QKC on each shard.');
     });
-
   }
 
   depositGasReserve = () => {
@@ -512,7 +531,7 @@ export default class Exchange extends Component {
           footer={this.state.exchangeRateFooter}
         >
           <Input autoFocus style={{borderRadius: '100px', padding: '15px 32px', margin: '0 20px 10px 30px', width: '85%', height: '25px'}} 
-                 innerBefore="Exchange Rate:"
+                 innerBefore={this.state.tokenName + '/QKC'}
                  onChange={this.onChangeExchangeRate.bind(this)}/>
           <Input style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '85%', height: '25px'}} 
                 innerBefore="Gas Reserve Amount:"
