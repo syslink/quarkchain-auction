@@ -134,30 +134,38 @@ export default class Exchange extends Component {
             GeneralNativeTokenManager.registeredTokens(this.state.tokenId).then(registered => {
               this.state.allShardsInfo[i].needRegister = required && !registered;
               this.setState({allShardsInfo: this.state.allShardsInfo});
-              GeneralNativeTokenManager.gasReserves(this.state.tokenId).then(gasReserve => {
-                if (gasReserve == null) return;
-                this.state.allShardsInfo[i].admin = gasReserve.admin;
-                const exchangeRate = !gasReserve.exchangeRate.denominator.isZero() ? gasReserve.exchangeRate.numerator.toNumber() / gasReserve.exchangeRate.denominator.toNumber() : 0;
-                this.state.allShardsInfo[i].exchangeRate = exchangeRate;// != 0 ? exchangeRate.mul(100).toNumber() : 0;
-                this.state.allShardsInfo[i].refundRate = gasReserve.refundPercentage.toNumber();
-                this.setState({allShardsInfo: this.state.allShardsInfo});
-                GeneralNativeTokenManager.gasReserveBalance([this.state.tokenId, gasReserve.admin]).then(gasReserve => {
-                  this.state.allShardsInfo[i].adminGasReserve = new BigNumber(gasReserve.toHexString(), 16).shiftedBy(-18).toNumber();
-                  this.setState({allShardsInfo: this.state.allShardsInfo});
-                });
-                GeneralNativeTokenManager.gasReserveBalance([this.state.tokenId, accounts[0]]).then(gasReserve => {
-                  this.state.allShardsInfo[i].userGasReserve = new BigNumber(gasReserve.toHexString(), 16).shiftedBy(-18).toNumber();
-                  this.setState({allShardsInfo: this.state.allShardsInfo});
-                });
-                GeneralNativeTokenManager.nativeTokenBalance([this.state.tokenId, accounts[0]]).then(balance => {
-                  this.state.allShardsInfo[i].userNativeTokenBalance = new BigNumber(balance.toHexString(), 16).shiftedBy(-18).toNumber();
-                  this.setState({allShardsInfo: this.state.allShardsInfo});
-                });
-              });
+              this.updateAdminReserve(GeneralNativeTokenManager, i);
+              this.updateUserReserve(GeneralNativeTokenManager, i, accounts[0]);
             });
           });
         }
       });   
+    });
+  }
+
+  updateAdminReserve = (contract, shardIndex) => {
+    contract.gasReserves(this.state.tokenId).then(gasReserve => {
+      if (gasReserve == null) return;
+      this.state.allShardsInfo[shardIndex].admin = gasReserve.admin;
+      const exchangeRate = !gasReserve.exchangeRate.denominator.isZero() ? gasReserve.exchangeRate.numerator.toNumber() / gasReserve.exchangeRate.denominator.toNumber() : 0;
+      this.state.allShardsInfo[shardIndex].exchangeRate = exchangeRate;// != 0 ? exchangeRate.mul(100).toNumber() : 0;
+      this.state.allShardsInfo[shardIndex].refundRate = gasReserve.refundPercentage.toNumber();
+      this.setState({allShardsInfo: this.state.allShardsInfo});
+      contract.gasReserveBalance([this.state.tokenId, gasReserve.admin]).then(gasReserve => {
+        this.state.allShardsInfo[shardIndex].adminGasReserve = new BigNumber(gasReserve.toHexString(), 16).shiftedBy(-18).toNumber();
+        this.setState({allShardsInfo: this.state.allShardsInfo});
+      });
+    });
+  }
+
+  updateUserReserve = (contract, shardIndex, account) => {
+    contract.gasReserveBalance([this.state.tokenId, account]).then(gasReserve => {
+      this.state.allShardsInfo[shardIndex].userGasReserve = new BigNumber(gasReserve.toHexString(), 16).shiftedBy(-18).toNumber();
+      this.setState({allShardsInfo: this.state.allShardsInfo});
+    });
+    contract.nativeTokenBalance([this.state.tokenId, account]).then(balance => {
+      this.state.allShardsInfo[shardIndex].userNativeTokenBalance = new BigNumber(balance.toHexString(), 16).shiftedBy(-18).toNumber();
+      this.setState({allShardsInfo: this.state.allShardsInfo});
     });
   }
 
@@ -222,7 +230,20 @@ export default class Exchange extends Component {
 
   sendRegisterTx = () => {    
     Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].registerToken([], 
-      {transferTokenId: this.state.tokenId, transferAmount: new BigNumber(this.state.tokenAmount), fullShardKey: '00000000'}, this.getData).then(txId => {
+      {transferTokenId: this.state.tokenId, transferAmount: new BigNumber(this.state.tokenAmount), fullShardKey: '00000000'}, () => {        
+        const intervalId = setInterval(() => {
+          Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].registrationRequired().then(required => {
+            Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].registeredTokens(this.state.tokenId).then(registered => {
+              if (!required || registered)
+              {
+                clearInterval(intervalId);
+                this.state.allShardsInfo[this.state.curShardIndex].needRegister = false;
+                this.setState({allShardsInfo: this.state.allShardsInfo});
+              }
+            });
+          });
+        }, 2000);
+      }).then(txId => {
       if (new BigNumber(txId, 16).toNumber() == 0) {
         tool.displayErrorInfo('Fail to send transaction.');
         return;
@@ -287,9 +308,18 @@ export default class Exchange extends Component {
       tool.displayErrorInfo('Init gas reserve amount cannot be less than ' + this.state.allShardsInfo[this.state.curShardIndex].minGasReserveInit.shiftedBy(-18).toNumber() + ' QKC');
       return;
     }
-    const setRateFunc = (transferAmount, fullShardKey) => {
+    const transferAmount = new BigNumber(this.state.gasReserveAmountValue);
+    const setRateFunc = (fullShardKey) => {
       Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].proposeNewExchangeRate([this.state.tokenId, numerator, denominator], 
-        {transferAmount, fullShardKey}, this.getData).then(txId => {
+        {transferAmount, fullShardKey}, () => {
+          const intervalId = setInterval(() => {
+            this.updateAdminReserve(Contracts.GeneralNativeTokenManagers[this.state.curShardIndex], this.state.curShardIndex);
+            this.updateUserReserve(Contracts.GeneralNativeTokenManagers[this.state.curShardIndex], this.state.curShardIndex, this.state.tokenInfo.curAccount);
+            if (this.state.allShardsInfo[this.state.curShardIndex].exchangeRate == numerator / denominator) {
+              clearInterval(intervalId);
+            }
+          }, 2000);
+        }).then(txId => {
         if (new BigNumber(txId, 16).toNumber() == 0) {
           tool.displayErrorInfo('Fail to send transaction.');
           return;
@@ -301,7 +331,10 @@ export default class Exchange extends Component {
         tool.displayErrorInfo(error.message);
       });
     }
-    const transferAmount = new BigNumber(this.state.gasReserveAmountValue);
+    this.sendTxByAutoSelectShard(setRateFunc, transferAmount);
+  }
+
+  sendTxByAutoSelectShard = (func, transferAmount) => {
     qkcRpc.getAccountData(this.state.tokenInfo.curAccount + '000' + this.state.curShardIndex + '0001', 'latest', true).then(accountData => {
       const shards = [accountData.primary];
       shards.push(...accountData.shards);
@@ -311,7 +344,7 @@ export default class Exchange extends Component {
             if (new BigNumber(balanceInfo.balance, 16).shiftedBy(-18).isGreaterThan(transferAmount)) {
               const preZeroNum = 8 - (oneShard.fullShardId.length - 2);
               const fullShardKey = '0'.repeat(preZeroNum) + oneShard.fullShardId.substr(2);
-              setRateFunc(transferAmount, fullShardKey);
+              func(fullShardKey);
               return;
             }
           }
@@ -327,19 +360,36 @@ export default class Exchange extends Component {
       tool.displayErrorInfo('Token amount only can be a number.');
       return;
     }
+    if (this.state.tokenAmount == 0) {
+      tool.displayErrorInfo('Token amount must be bigger than 0.');
+      return;
+    }
 
-    Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].depositGasReserve(this.state.tokenId, 
-      {transferAmount: new BigNumber(this.state.tokenAmount)}, this.getData).then(txId => {
-      if (new BigNumber(txId, 16).toNumber() == 0) {
-        tool.displayErrorInfo('Fail to send transaction.');
-        return;
-      }
-      this.setState({depositGasReserveVisible: false});
-      tool.displayTxInfo(txId);
-    }).catch(error => {
-      if (error.code == 4001) return;
-      tool.displayErrorInfo(error.message);
-    });
+    const transferAmount = new BigNumber(this.state.tokenAmount);
+    const oldGasReserve = this.state.allShardsInfo[this.state.curShardIndex].userGasReserve;
+    const depositGasReserveFunc = (fullShardKey) => {
+      Contracts.GeneralNativeTokenManagers[this.state.curShardIndex].depositGasReserve(this.state.tokenId, 
+        {transferAmount, fullShardKey}, () => {
+          const intervalId = setInterval(() => {
+            this.updateAdminReserve(Contracts.GeneralNativeTokenManagers[this.state.curShardIndex], this.state.curShardIndex);
+            this.updateUserReserve(Contracts.GeneralNativeTokenManagers[this.state.curShardIndex], this.state.curShardIndex, this.state.tokenInfo.curAccount);
+            if (this.state.allShardsInfo[this.state.curShardIndex].userGasReserve > oldGasReserve) {
+              clearInterval(intervalId);
+            }
+          }, 2000);
+        }).then(txId => {
+        if (new BigNumber(txId, 16).toNumber() == 0) {
+          tool.displayErrorInfo('Fail to send transaction.');
+          return;
+        }
+        this.setState({depositGasReserveVisible: false});
+        tool.displayTxInfo(txId);
+      }).catch(error => {
+        if (error.code == 4001) return;
+        tool.displayErrorInfo(error.message);
+      });
+    }    
+    this.sendTxByAutoSelectShard(depositGasReserveFunc, transferAmount);
   }
   
   render() {
