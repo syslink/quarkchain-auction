@@ -9,6 +9,7 @@ export const QuarkChainNetwork = QKC_EXPLORER;
 export const QuarkChainRPC = QKC_JRPC;
 export const InvalidAddr = '0x0000000000000000000000000000000000000000';
 export const MetamaskErrorInfo = 'Please check whether MetaMask has been installed and login, or whether the website has been added to the trusted connections of MetaMask.';
+const TOKEN_BASE = 36;
 
 export function initQkcWeb3() {
   if (window.web3) {
@@ -23,21 +24,31 @@ export function initQkcWeb3() {
 }
 
 export function convertTokenName2Num(tokenName) {
-  let number = new BigNumber(tokenName.toLowerCase(), 36);
+  let number = new BigNumber(tokenName.toLowerCase(), TOKEN_BASE);
   const len = tokenName.length;
-  const plusNumber = new BigNumber('1'.repeat(len - 1) + '0', 36);
+  const plusNumber = new BigNumber('1'.repeat(len - 1) + '0', TOKEN_BASE);
   return number.toNumber() + plusNumber.toNumber();
 }
 
 export function convertTokenNum2Name(tokenId) {
   let number = new BigNumber(tokenId);
-  const len = number.toString(36).length;
-  if (len > 2) {
-    const minusNumber = new BigNumber('1'.repeat(len - 1) + '0', 36);
-    number = number.minus(minusNumber);
+  let tokenName = tokenCharDecode(number.mod(TOKEN_BASE).toNumber());
+  number = number.dividedToIntegerBy(TOKEN_BASE).minus(1);
+  while (number.isGreaterThanOrEqualTo(0)) {
+    tokenName = tokenCharDecode(number.mod(TOKEN_BASE).toNumber()) + tokenName;
+    number = number.dividedToIntegerBy(TOKEN_BASE).minus(1);
   }
+  return tokenName;
+}
 
-  return number.toString(36).toUpperCase();
+function tokenCharDecode(id) {
+  let result;
+  if (id < 10) {
+    result = '0'.charCodeAt() + id;
+  } else {
+    result = 'A'.charCodeAt() + (id - 10);
+  }
+  return String.fromCharCode(result);
 }
 
 Date.prototype.Format = function(fmt)   
