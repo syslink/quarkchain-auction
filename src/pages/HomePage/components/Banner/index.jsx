@@ -144,8 +144,8 @@ export default class Banner extends Component {
       tool.displayErrorInfo('Token name only can be a mix of capital letters and numbers with length between 5 and 12.');
       return;
     }
-    valid = /^[0-9.]*$/.test(this.state.bidPrice);
-    if (!valid) {
+    valid = /^[0-9]*[.]?[0-9]*$/.test(this.state.bidPrice);
+    if (!valid || this.state.bidPrice == '.') {
       tool.displayErrorInfo('Bid price only can be a number.');
       return;
     }
