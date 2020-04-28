@@ -399,7 +399,7 @@ export default class Exchange extends Component {
     return (
       <div className={styles.container}>
         <div className={styles.banner}>
-          <div className={styles.content}>
+          <div className={styles.content} style={{margin: '20px 0 50px 0'}}>
             <div className={styles.title}>{this.state.tokenInfo.tokenName}</div>
     
             <li className={styles.navItem}>

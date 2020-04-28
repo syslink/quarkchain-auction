@@ -13,6 +13,7 @@ const id = require('./images/ID.png');
 const leftime = require('./images/leftime.png');
 const jiantou = require('./images/jiantou.png');
 const confirm = require('./images/confirm.png');
+const bg = require('./images/bg.png');
 
 export default class Banner extends Component {
 
