@@ -278,7 +278,7 @@ export default class Banner extends Component {
           
           <li className={styles.bidInfo} style={{width: 700}}>
             <Input disabled={this.state.paused || this.state.bEnd} style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', width: '250px', height: '25px'}} 
-                   placeholder="Bid Price"  onChange={this.changeBidPrice.bind(this)}/>
+                   placeholder="Bid Price"  onChange={this.changeBidPrice.bind(this)} title={this.state.bEnd ? 'please end the current auction to start a new round' : ''}/>
             <p style={{color: 'white', width: 400}}>
             Will check your remaining QKC in auction system smart contract and use them first when possible, 
             then you just need to pay for the difference.</p>

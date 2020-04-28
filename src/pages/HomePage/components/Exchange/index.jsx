@@ -581,7 +581,7 @@ export default class Exchange extends Component {
           footer={this.state.exchangeRateFooter}
         >
           <Input autoFocus style={{borderRadius: '100px', padding: '15px 32px', margin: '0 20px 10px 30px', width: '85%', height: '25px'}} 
-                 innerBefore={this.state.tokenName + '/QKC'}
+                 innerBefore={this.state.tokenName + '/QKC:'}
                  onChange={this.onChangeExchangeRate.bind(this)}/>
           <Input style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '85%', height: '25px'}} 
                 innerBefore="Gas Reserve Amount:"
