@@ -536,6 +536,7 @@ export default class Exchange extends Component {
         <Dialog style={{ width: "30%"}}
           visible={this.state.registerVisible}
           closeable="esc,mask"
+          isFullScreen={true}
           onOk={() => this.setState({registerVisible: false})}
           onCancel={() => this.setState({registerVisible: false})}
           onClose={() => this.setState({registerVisible: false})}
@@ -556,6 +557,7 @@ export default class Exchange extends Component {
         <Dialog style={{ width: "30%"}}
           visible={this.state.depositGasReserveVisible}
           closeable="esc,mask"
+          isFullScreen={true}
           onOk={() => this.setState({depositGasReserveVisible: false})}
           onCancel={() => this.setState({depositGasReserveVisible: false})}
           onClose={() => this.setState({depositGasReserveVisible: false})}
@@ -573,6 +575,7 @@ export default class Exchange extends Component {
         <Dialog style={{ width: "30%" }}
           visible={this.state.exchangeRateVisible}
           closeable="esc,mask"
+          isFullScreen={true}
           onOk={() => this.setState({exchangeRateVisible: false})}
           onCancel={() => this.setState({exchangeRateVisible: false})}
           onClose={() => this.setState({exchangeRateVisible: false})}
@@ -582,7 +585,8 @@ export default class Exchange extends Component {
         >
           <Input autoFocus style={{borderRadius: '100px', padding: '15px 32px', margin: '0 20px 10px 30px', width: '85%', height: '25px'}} 
                  innerBefore={this.state.tokenName + '/QKC:'}
-                 onChange={this.onChangeExchangeRate.bind(this)}/>
+                 onChange={this.onChangeExchangeRate.bind(this)}
+                 placeholder='decimal numbers, e.g. 0.5, 2'/>
           <Input style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', marginLeft: 30, width: '85%', height: '25px'}} 
                 innerBefore="Gas Reserve Amount:"
                 onChange={this.onChangeGasReserveAmount.bind(this)}
@@ -596,7 +600,7 @@ export default class Exchange extends Component {
         <Dialog style={{ width: "35%" }}
           visible={this.state.mintTokenVisible}
           closeable="esc,mask"
-          //onOk={() => this.setState({mintTokenVisible: false})}
+          isFullScreen={true}
           onCancel={() => this.setState({mintTokenVisible: false})}
           onClose={() => this.setState({mintTokenVisible: false})}
           title='Mint Token'

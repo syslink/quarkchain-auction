@@ -245,7 +245,8 @@ export default class Banner extends Component {
           
           <li className={styles.bidInfo}>
             <Input disabled={this.state.paused || this.state.bEnd} style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', width: '250px', height: '25px'}} 
-                   placeholder="Token Name" onChange={this.changeTokenName.bind(this)} title={this.state.bEnd ? 'please end the current auction to start a new round' : ''}/>
+                   placeholder="Token Name" onChange={this.changeTokenName.bind(this)} 
+                   title={this.state.bEnd ? (!this.state.highestBidderIsMe ? 'please start a new round' : 'please end the current auction to start a new round') : ''}/>
             {
               this.state.checkImgVisible ? 
                 <Button type='secondary' style={{ borderRadius: '100px', border: '2px solid #00C4FF', backgroundColor: 'transparent', 
@@ -279,7 +280,8 @@ export default class Banner extends Component {
           
           <li className={styles.bidInfo} style={{width: 700}}>
             <Input disabled={this.state.paused || this.state.bEnd} style={{borderRadius: '100px', padding: '15px 32px', marginRight: '20px', width: '250px', height: '25px'}} 
-                   placeholder="Bid Price"  onChange={this.changeBidPrice.bind(this)} title={this.state.bEnd ? 'please end the current auction to start a new round' : ''}/>
+                   placeholder="Bid Price"  onChange={this.changeBidPrice.bind(this)} 
+                   title={this.state.bEnd ? (!this.state.highestBidderIsMe ? 'please start a new round' : 'please end the current auction to start a new round') : ''}/>
             <p style={{color: 'white', width: 400}}>
             Will check your remaining QKC in auction system smart contract and use them first when possible, 
             then you just need to pay for the difference.</p>
@@ -336,6 +338,7 @@ export default class Banner extends Component {
         <Dialog style={{ width: "25%" }}
           visible={this.state.confimationVisible}
           closeable="esc,mask"
+          isFullScreen={true}
           onOk={this.bidNewToken.bind(this)}
           onCancel={() => this.setState({confimationVisible: false})}
           onClose={() => this.setState({confimationVisible: false})}
