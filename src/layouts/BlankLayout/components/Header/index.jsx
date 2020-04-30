@@ -13,7 +13,7 @@ import styles from './index.module.scss';
 export const history = createHashHistory();
 const LOGO = require('./images/logo.png');
 const ACCOUNT = require('./images/account.png');
-
+const NoAccount = 'No Account';
 
 export default class Header extends Component {
 
@@ -109,12 +109,15 @@ export default class Header extends Component {
     });
   }
 
+  jumpTo = (account) => {
+    if (account == NoAccount) return;
+    const href = tool.QuarkChainNetwork + 'address/' + this.state.curAccount + Contracts.NonReservedNativeTokenManager.fullShardKey;
+    window.open(href);
+  }
+
   render () {
-    const dispayAccount = this.state.curAccount != null ? <a href={tool.QuarkChainNetwork + 'address/' 
-                                            + this.state.curAccount + Contracts.NonReservedNativeTokenManager.fullShardKey} target='_blank'>
-                                                {tool.displayShortAddr(this.state.curAccount)}
-                                            </a>  : 'No Account';
-    const accountInfoBtn = <Button text> {dispayAccount} </Button>
+    const dispayAccount = this.state.curAccount != null ? tool.displayShortAddr(this.state.curAccount)  : NoAccount;
+    const accountInfoBtn = <Button text onClick={this.jumpTo.bind(this, this.state.curAccount)}> {dispayAccount} </Button>
     return (
       <div className={styles.header}>
         <div className={styles.logo}>
