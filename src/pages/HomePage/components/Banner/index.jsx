@@ -335,7 +335,7 @@ export default class Banner extends Component {
           <br/>
           <p style={{fontSize: 18, lineHeight: '150%'}}>4. A new bid price needs to be at least {this.state.auctionParams.minIncrementInPercent} percent more than the current.</p>
         </div>
-        <Dialog style={{ width: "25%" }}
+        <Dialog style={{ width: "500px" }}
           visible={this.state.confimationVisible}
           closeable="esc,mask"
           isFullScreen={true}

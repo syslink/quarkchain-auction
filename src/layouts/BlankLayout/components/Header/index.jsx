@@ -114,7 +114,7 @@ export default class Header extends Component {
                                             + this.state.curAccount + Contracts.NonReservedNativeTokenManager.fullShardKey} target='_blank'>
                                                 {tool.displayShortAddr(this.state.curAccount)}
                                             </a>  : 'No Account';
-    const accountInfoBtn = <Button className={styles.accountInfo} text iconSize='medium'> {dispayAccount} </Button>
+    const accountInfoBtn = <Button text> {dispayAccount} </Button>
     return (
       <div className={styles.header}>
         <div className={styles.logo}>

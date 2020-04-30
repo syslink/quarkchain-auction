@@ -46,12 +46,14 @@
 
 .accountItem {
   display: flex;
-  align-items: center; /*定义body的元素垂直居中*/
+  align-items: center;
+  justify-content: center;
 }
 
 .accountImg {
-  height: 40px;
-  width: 40px;
+  height: 14pt;
+  width: 14pt;
+  margin-right: 5px;
 }
 
 .ballonItem {
@@ -65,4 +67,8 @@
   height: 30px;
   width: 30px;
   margin-right: 10px;
+}
+
+.href {
+  color: #fff;   
 }

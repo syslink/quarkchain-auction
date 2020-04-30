@@ -27,3 +27,11 @@ body {
   background:rgba(0,195,255,1);
   border-radius:8px;
 }
+
+a {
+  color: #fff;            
+  &:hover {
+    text-decoration: underline;
+    color: #fff;
+  }
+}

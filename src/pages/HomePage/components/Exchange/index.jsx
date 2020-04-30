@@ -489,8 +489,53 @@ export default class Exchange extends Component {
                 </Row>
               </Col>
             </Row>
-            <hr style={{ width: '100%', marginTop: '20px'}}/>
-            <Row justify='start' style={{marginTop: '20px'}}>                
+            <hr style={{ width: '100%', marginTop: '10px'}}/>
+            <Row style={{marginTop: '10px'}}>
+              <Col span='14'>
+                <Row justify='start'>                
+                <div  style={{ width: '300px'}} className={styles.nextValue}>User Gas Reserve: {oneShard.userGasReserve} QKC</div>
+                  {
+                    oneShard.needRegister != false ?                   
+                      ''
+                        :
+                      (this.state.tokenInfo.curAccount == oneShard.admin ?    
+                        <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={() => this.setState({depositGasReserveVisible: true, curShardIndex: i})}>                  
+                        Deposit >>
+                        </Button>
+                        :
+                        ''
+                      )
+                  }
+                  {
+                    oneShard.needRegister != false ?                   
+                      ''
+                      :
+                    ((this.state.tokenInfo.curAccount == oneShard.admin || oneShard.userGasReserve == 0) ?            
+                      ''
+                      :                    
+                      <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={this.withdraw.bind(this, i)}>                  
+                      Withdraw >>
+                      </Button>
+                    )
+                      
+                  }
+                </Row>
+              </Col>
+              <Col span='10'>
+                <Row justify='start'>                
+                  <div  style={{ width: '300px'}} className={styles.nextValue}>User Native Token Balance: {oneShard.userNativeTokenBalance} {this.state.tokenName}</div>
+                  {
+                    (oneShard.needRegister != false || oneShard.userNativeTokenBalance == 0) ?                   
+                      ''
+                        :
+                      <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={this.withdrawNativeToken.bind(this, i)}>                  
+                      Withdraw >>
+                      </Button>
+                  }
+                </Row>
+              </Col>
+            </Row>
+            {/* <Row justify='start' style={{marginTop: '20px'}}>                
               <div  style={{ width: '300px'}} className={styles.nextValue}>User Gas Reserve: {oneShard.userGasReserve} QKC</div>
                 {
                   oneShard.needRegister != false ?                   
@@ -528,12 +573,12 @@ export default class Exchange extends Component {
                     Withdraw >>
                     </Button>
                 }
-            </Row>
+            </Row> */}
           </div> 
          )
         }
         
-        <Dialog style={{ width: "30%"}}
+        <Dialog style={{ width: "500px"}}
           visible={this.state.registerVisible}
           closeable="esc,mask"
           isFullScreen={true}
@@ -554,7 +599,7 @@ export default class Exchange extends Component {
           </p>
         </Dialog>
 
-        <Dialog style={{ width: "30%"}}
+        <Dialog style={{ width: "500px"}}
           visible={this.state.depositGasReserveVisible}
           closeable="esc,mask"
           isFullScreen={true}
@@ -572,7 +617,7 @@ export default class Exchange extends Component {
                  onPressEnter={this.depositGasReserve.bind(this)}/>
         </Dialog>
         
-        <Dialog style={{ width: "30%" }}
+        <Dialog style={{ width: "500px" }}
           visible={this.state.exchangeRateVisible}
           closeable="esc,mask"
           isFullScreen={true}
@@ -597,7 +642,7 @@ export default class Exchange extends Component {
           </p>
         </Dialog>
 
-        <Dialog style={{ width: "35%" }}
+        <Dialog style={{ width: "500px" }}
           visible={this.state.mintTokenVisible}
           closeable="esc,mask"
           isFullScreen={true}
