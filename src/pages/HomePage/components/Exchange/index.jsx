@@ -535,45 +535,6 @@ export default class Exchange extends Component {
                 </Row>
               </Col>
             </Row>
-            {/* <Row justify='start' style={{marginTop: '20px'}}>                
-              <div  style={{ width: '300px'}} className={styles.nextValue}>User Gas Reserve: {oneShard.userGasReserve} QKC</div>
-                {
-                  oneShard.needRegister != false ?                   
-                    ''
-                      :
-                    (this.state.tokenInfo.curAccount == oneShard.admin ?    
-                      <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={() => this.setState({depositGasReserveVisible: true, curShardIndex: i})}>                  
-                      Deposit >>
-                      </Button>
-                      :
-                      ''
-                    )
-                }
-                {
-                  oneShard.needRegister != false ?                   
-                    ''
-                    :
-                  ((this.state.tokenInfo.curAccount == oneShard.admin || oneShard.userGasReserve == 0) ?            
-                    ''
-                    :                    
-                    <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={this.withdraw.bind(this, i)}>                  
-                    Withdraw >>
-                    </Button>
-                  )
-                    
-                }
-            </Row>
-            <Row justify='start' style={{marginTop: '20px'}}>                
-                <div  style={{ width: '300px'}} className={styles.nextValue}>User Native Token Balance: {oneShard.userNativeTokenBalance} {this.state.tokenName}</div>
-                {
-                  (oneShard.needRegister != false || oneShard.userNativeTokenBalance == 0) ?                   
-                    ''
-                      :
-                    <Button text style={{ color: '#00C4FF', marginLeft: '20px'}} onClick={this.withdrawNativeToken.bind(this, i)}>                  
-                    Withdraw >>
-                    </Button>
-                }
-            </Row> */}
           </div> 
          )
         }
