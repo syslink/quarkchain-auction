@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import cookie from 'react-cookies';
 import Banner from './components/Banner';
-import AuctionedTokens from './components/AuctionedTokens';
-import MyTokens from './components/MyTokens';
 import Exchange from './components/Exchange';
 import eventProxy from '../../utils/eventProxy';
 

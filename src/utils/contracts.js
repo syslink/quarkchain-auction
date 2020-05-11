@@ -173,6 +173,7 @@ function buildContractObj(networkId, qkcWeb3, myContract, contractAbi, contractA
 }
 
 async function initContractObj (qkcWeb3) {
+  if (window.ethereum == null) return false;
   if (Status.StartInit) {
     while (!Status.InitSuccess)
     {

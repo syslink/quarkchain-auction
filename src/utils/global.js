@@ -12,14 +12,14 @@ export const MetamaskErrorInfo = 'Please check whether MetaMask has been install
 const TOKEN_BASE = 36;
 
 export function initQkcWeb3() {
-  if (window.web3) {
+  if (window.web3 && window.ethereum) {
     qkcWeb3 = new Web3(window.web3);
     QuarkChain.injectWeb3(qkcWeb3, QuarkChainRPC);        
     Contracts.initContractObj(qkcWeb3).then(result => {
       console.log('initContractObj success');
     });
   } else {
-    Message.warning('Please install Metamask firstly, or you could NOT send transaction to the chain.');  
+    displayWarningInfo('Please install Metamask firstly, or you could NOT send transaction to the chain.');  
   }
 }
 
