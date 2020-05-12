@@ -13,7 +13,7 @@ const TOKEN_BASE = 36;
 
 export function initQkcWeb3() {
   if (window.web3 && window.ethereum) {
-    qkcWeb3 = new Web3(window.web3);
+    qkcWeb3 = new Web3(window.web3.currentProvider);
     QuarkChain.injectWeb3(qkcWeb3, QuarkChainRPC);        
     Contracts.initContractObj(qkcWeb3).then(result => {
       console.log('initContractObj success');
